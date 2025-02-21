@@ -1,0 +1,74 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model EmpleadoAdmin {
+  id         Int     @id @default(autoincrement())
+  correo     String  @unique
+  nombre     String
+  cargo      String
+  palabra_seguridad String         @db.VarChar(100)
+  cedula     String  @unique
+  contraseña String
+}
+
+model Estudiante {
+  id         Int     @id @default(autoincrement())
+  correo     String  @unique
+  cedula     String  @unique
+  nombre     String
+  carrera    String
+  contraseña String
+  foto       String?
+  palabra_seguridad String         @db.VarChar(100)
+  asistencias Asistencia[]
+  comentarios Comentario[]
+}
+
+model Plato {
+  id                   Int     @id @default(autoincrement())
+  titulo               String
+  descripcion          String
+  valoracionPorcentaje Float?
+  votosCount           Int     @default(0)
+  foto                 String?
+  menus                Menu[]
+  comentarios          Comentario[]
+}
+
+model Menu {
+  id        Int      @id @default(autoincrement())
+  fecha     DateTime
+  diaSemana String
+  hora      DateTime
+  plato     Plato    @relation(fields: [platoId], references: [id])
+  platoId   Int
+  asistencias Asistencia[]
+}
+
+model Asistencia {
+  id           Int      @id @default(autoincrement())
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
+  estudianteId Int
+  menu        Menu    @relation(fields: [menuId], references: [id])
+  menuId      Int
+  fecha       DateTime
+  hora        DateTime
+}
+
+model Comentario {
+  id           Int      @id @default(autoincrement())
+  comentario   String
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
+  estudianteId Int
+  plato       Plato    @relation(fields: [platoId], references: [id])
+  platoId     Int
+  createdAt   DateTime @default(now())
+}
