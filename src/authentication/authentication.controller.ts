@@ -8,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import RegisterEmployedDto from './dto/registerEmployedDto.dto';
+import RegisterStudentDtoR from './dto/registerStudentDto.dto';
 import { AuthenticationService } from './authentication.service';
 import { IResponse } from 'src/common/interfaces/response.interface';
 
@@ -27,9 +28,14 @@ export class AuthenticationController {
     throw new NotFoundException('User not found');
   }
 
-  @Post()
-  create(@Body() createAuthenticationDto: RegisterEmployedDto) {
-    return this.authenticationService.create(createAuthenticationDto);
+  @Post('/register/employed')
+  createEmployed(@Body() createAuthenticationDto: RegisterEmployedDto) {
+    return this.authenticationService.createEmployed(createAuthenticationDto);
+  }
+
+  @Post('/register/student')
+  createStudent(@Body() createAuthenticationDto: RegisterStudentDtoR) {
+    return this.authenticationService.createStudent(createAuthenticationDto);
   }
 
   @Get()

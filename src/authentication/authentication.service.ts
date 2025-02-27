@@ -1,48 +1,34 @@
 import RegisterEmployedDto from './dto/registerEmployedDto.dto';
+import RegisterStudentDtoR from './dto/registerStudentDto.dto';
 import {
   Injectable,
   ConflictException,
   InternalServerErrorException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { IResponse } from 'src/common/interfaces/response.interface';
 import { PrismaService } from '../prisma/prisma.service';
-import { EmpleadoAdmin } from '@prisma/client';
+import { EmpleadoAdmin, Estudiante } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { validateOrReject, ValidationError } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthenticationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(
+  async createEmployed(
     registro: RegisterEmployedDto,
   ): Promise<IResponse<EmpleadoAdmin>> {
     try {
-      // Validar DTO antes de procesarlo
-      await validateOrReject(registro).catch((errors: ValidationError[]) => {
-        const errorMessages: string[] = errors.flatMap((err) =>
-          err.constraints ? Object.values(err.constraints) : [],
-        );
-        throw new ForbiddenException({
-          success: false,
-          data: null,
-          error: errorMessages,
-        });
-      });
-
-      if (!registro.contraseña) {
-        throw new ForbiddenException({
-          success: false,
-          data: null,
-          error: 'La contraseña no puede estar vacía',
-        });
+      // Validación de la contraseña (ya que ValidationPipe no valida si es opcional)
+      if (!registro.contraseña || registro.contraseña.trim().length === 0) {
+        throw new BadRequestException('La contraseña no puede estar vacía');
       }
 
+      // Encriptar contraseña
       const hashedPassword = await bcrypt.hash(registro.contraseña, 10);
 
+      // Crear el usuario en la base de datos
       const nuevoEmpleado = await this.prisma.empleadoAdmin.create({
         data: {
           correo: registro.correo,
@@ -62,26 +48,64 @@ export class AuthenticationService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new ConflictException({
-            success: false,
-            data: null,
-            error: 'El correo o la cédula ya están registrados',
-          });
+          throw new ConflictException(
+            'El correo o la cédula ya están registrados',
+          );
         }
       }
-      if (error instanceof ForbiddenException) {
-        throw error;
-      }
-
       if (error instanceof BadRequestException) {
         throw error;
       }
+      throw new InternalServerErrorException(
+        'Error en la creación del usuario',
+      );
+    }
+  }
 
-      throw new InternalServerErrorException({
-        success: false,
-        data: null,
-        error: 'Error en la creación del usuario',
+  async createStudent(
+    registro: RegisterStudentDtoR,
+  ): Promise<IResponse<Estudiante>> {
+    try {
+      // Validación de la contraseña (ya que ValidationPipe no valida si es opcional)
+      if (!registro.contraseña || registro.contraseña.trim().length === 0) {
+        throw new BadRequestException('La contraseña no puede estar vacía');
+      }
+
+      // Encriptar contraseña
+      const hashedPassword = await bcrypt.hash(registro.contraseña, 10);
+
+      // Crear el usuario en la base de datos
+      const nuevoEstudiante = await this.prisma.estudiante.create({
+        data: {
+          correo: registro.correo,
+          nombre: registro.nombre,
+          carrera: registro.carrera,
+          foto: registro.foto,
+          palabra_seguridad: registro.palabra_seguridad,
+          cedula: registro.cedula,
+          contraseña: hashedPassword,
+        },
       });
+
+      return {
+        success: true,
+        data: nuevoEstudiante,
+        error: null,
+      };
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException(
+            'El correo o la cédula ya están registrados',
+          );
+        }
+      }
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Error en la creación del usuario',
+      );
     }
   }
 

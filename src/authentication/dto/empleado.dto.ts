@@ -1,5 +1,5 @@
 export class EmpleadoAdminDTO {
-  id?: number;
+  id: number;
   correo: string;
   nombre: string;
   cargo: string;
@@ -8,7 +8,7 @@ export class EmpleadoAdminDTO {
   contrasena: string;
 
   constructor(data: Partial<EmpleadoAdminDTO>) {
-    this.id = data.id;
+    this.id = data.id ?? 0;
     this.correo = data.correo ?? '';
     this.nombre = data.nombre ?? '';
     this.cargo = data.cargo ?? '';
