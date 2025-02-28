@@ -11,6 +11,7 @@ import RegisterEmployedDto from './dto/registerEmployedDto.dto';
 import RegisterStudentDtoR from './dto/registerStudentDto.dto';
 import { AuthenticationService } from './authentication.service';
 import { IResponse } from 'src/common/interfaces/response.interface';
+import LoginDto from './dto/login.dto';
 
 @Controller('authentication')
 export class AuthenticationController {
@@ -30,12 +31,17 @@ export class AuthenticationController {
 
   @Post('/register/employed')
   createEmployed(@Body() createAuthenticationDto: RegisterEmployedDto) {
-    return this.authenticationService.createEmployed(createAuthenticationDto);
+    return this.authenticationService.createEmployee(createAuthenticationDto);
   }
 
   @Post('/register/student')
   createStudent(@Body() createAuthenticationDto: RegisterStudentDtoR) {
     return this.authenticationService.createStudent(createAuthenticationDto);
+  }
+
+  @Post('/login')
+  login(@Body() loginDto: LoginDto) {
+    return this.authenticationService.login(loginDto);
   }
 
   @Get()

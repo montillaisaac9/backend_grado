@@ -7,68 +7,103 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+model Career {
+  id          Int      @id @default(autoincrement()) // Unique identifier for the career
+  name        String   @unique                      // Career name, unique
+  description String?  // Optional description of the career
+  createdAt   DateTime @default(now())               // Creation date, defaults to the current date
+  isActive    Boolean  @default(true)                 // Indicates whether the career is active (true) or not (false)
 
-
-model EmpleadoAdmin {
-  id         Int     @id @default(autoincrement())
-  correo     String  @unique
-  nombre     String
-  cargo      String
-  palabra_seguridad String         @db.VarChar(100)
-  cedula     String  @unique
-  contraseña String
+  // Many-to-many relationships
+  students       StudentCareer[]
+  adminEmployees AdminEmployeeCareer[]
 }
 
-model Estudiante {
-  id         Int     @id @default(autoincrement())
-  correo     String  @unique
-  cedula     String  @unique
-  nombre     String
-  carrera    String
-  contraseña String
-  foto       String?
-  palabra_seguridad String         @db.VarChar(100)
-  asistencias Asistencia[]
-  comentarios Comentario[]
+model Student {
+  id             Int    @id @default(autoincrement())
+  email          String @unique
+  identification String @unique
+  name           String
+  password       String
+  photo          String?
+  securityWord   String @db.VarChar(100)
+  attendances    Attendance[]
+  comments       Comment[]
+
+  // Many-to-many relationship
+  careers        StudentCareer[]
 }
 
-model Plato {
-  id                   Int     @id @default(autoincrement())
-  titulo               String
-  descripcion          String
-  valoracionPorcentaje Float?
-  votosCount           Int     @default(0)
-  foto                 String?
-  menus                Menu[]
-  comentarios          Comentario[]
+model AdminEmployee {
+  id             Int    @id @default(autoincrement())
+  email          String @unique
+  name           String
+  position       String
+  securityWord   String @db.VarChar(100)
+  identification String @unique
+  password       String
+
+  // Many-to-many relationship
+  careers        AdminEmployeeCareer[]
+}
+
+// Intermediate table for Student-Career relationship (Many-to-Many)
+model StudentCareer {
+  studentId  Int
+  careerId   Int
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  career     Career  @relation(fields: [careerId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, careerId]) // Composite primary key
+}
+
+// Intermediate table for AdminEmployee-Career relationship (Many-to-Many)
+model AdminEmployeeCareer {
+  adminEmployeeId Int
+  careerId        Int
+  adminEmployee   AdminEmployee @relation(fields: [adminEmployeeId], references: [id], onDelete: Cascade)
+  career          Career        @relation(fields: [careerId], references: [id], onDelete: Cascade)
+
+  @@id([adminEmployeeId, careerId]) // Composite primary key
+}
+
+model Dish {
+  id                  Int     @id @default(autoincrement())
+  title               String
+  description         String
+  ratingPercentage    Float?
+  votesCount          Int     @default(0)
+  photo               String?
+  menus               Menu[]
+  comments            Comment[]
 }
 
 model Menu {
-  id        Int      @id @default(autoincrement())
-  fecha     DateTime
-  diaSemana String
-  hora      DateTime
-  plato     Plato    @relation(fields: [platoId], references: [id])
-  platoId   Int
-  asistencias Asistencia[]
+  id          Int        @id @default(autoincrement())
+  date        DateTime
+  dayOfWeek   String
+  time        DateTime
+  dish        Dish       @relation(fields: [dishId], references: [id])
+  dishId      Int
+  attendances Attendance[]
 }
 
-model Asistencia {
-  id           Int      @id @default(autoincrement())
-  estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
-  estudianteId Int
-  menu        Menu    @relation(fields: [menuId], references: [id])
+model Attendance {
+  id          Int       @id @default(autoincrement())
+  student     Student   @relation(fields: [studentId], references: [id])
+  studentId   Int
+  menu        Menu      @relation(fields: [menuId], references: [id])
   menuId      Int
-  fecha       DateTime
-  hora        DateTime
+  date        DateTime
+  time        DateTime
 }
 
-model Comentario {
-  id           Int      @id @default(autoincrement())
-  comentario   String
-  estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
-  estudianteId Int
-  plato       Plato    @relation(fields: [platoId], references: [id])
-  platoId     Int
-  createdAt   DateTime @default(now())
+model Comment {
+  id          Int       @id @default(autoincrement())
+  text        String
+  student     Student   @relation(fields: [studentId], references: [id])
+  studentId   Int
+  dish        Dish      @relation(fields: [dishId], references: [id])
+  dishId      Int
+  createdAt   DateTime  @default(now())
 }

@@ -1,42 +1,25 @@
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  MinLength,
-  IsOptional,
-  IsEnum,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
-export default class RegisterEmployedDto {
-  @IsEnum(['admin', 'estudiante'], {
-    message: 'El rol debe ser admin o estudiante',
-  })
-  role: 'admin' | 'estudiante';
+export default class RegisterEmployeeDto {
+  @IsEmail({}, { message: 'The email is not valid' })
+  @IsNotEmpty({ message: 'Email is required' })
+  email: string;
 
-  @IsEmail({}, { message: 'El correo no es válido' })
-  @IsNotEmpty({ message: 'El correo es obligatorio' })
-  correo: string;
+  @IsNotEmpty({ message: 'Identification is required' })
+  @IsString({ message: 'Identification must be a string' })
+  identification: string;
 
-  @IsNotEmpty({ message: 'La cédula es obligatoria' })
-  @IsString({ message: 'La cédula debe ser un texto' })
-  cedula: string;
+  @IsNotEmpty({ message: 'Password cannot be empty' })
+  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  password: string;
 
-  @IsNotEmpty({ message: 'La contraseña no puede estar vacía' })
-  @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
-  contraseña: string;
+  @IsNotEmpty({ message: 'Security word is required' })
+  securityWord: string;
 
-  @IsNotEmpty({ message: 'La palabra de seguridad es obligatoria' })
-  palabra_seguridad: string;
+  @IsNotEmpty({ message: 'Name is required' })
+  name: string;
 
-  @IsNotEmpty({ message: 'El nombre es obligatorio' })
-  nombre: string;
-
-  @IsOptional()
-  cargo: string;
-
-  @IsOptional()
-  carrera: string;
-
-  @IsOptional()
-  foto: string;
+  // Removemos @IsOptional() para que coincida con Prisma
+  @IsNotEmpty({ message: 'Position is required' })
+  position: string;
 }
