@@ -5,6 +5,7 @@ import { DatabaseExceptionFilter } from './common/filters/database-exception.fil
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,7 +24,7 @@ async function bootstrap() {
     new DatabaseExceptionFilter(),
     new GlobalExceptionFilter(),
   );
-
+  app.use(cookieParser());
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

@@ -6,7 +6,9 @@ import {
   Param,
   Delete,
   NotFoundException,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import RegisterEmployedDto from './dto/registerEmployedDto.dto';
 import RegisterStudentDtoR from './dto/registerStudentDto.dto';
 import { AuthenticationService } from './authentication.service';
@@ -40,8 +42,8 @@ export class AuthenticationController {
   }
 
   @Post('/login')
-  login(@Body() loginDto: LoginDto) {
-    return this.authenticationService.login(loginDto);
+  login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    return this.authenticationService.login(loginDto, res);
   }
 
   @Get()

@@ -4,6 +4,9 @@ import {
   IsString,
   MinLength,
   IsOptional,
+  IsArray,
+  ArrayNotEmpty,
+  IsNumber,
 } from 'class-validator';
 
 export default class RegisterStudentDto {
@@ -19,9 +22,11 @@ export default class RegisterStudentDto {
   @IsString({ message: 'El nombre debe ser un texto' })
   name: string;
 
-  @IsNotEmpty({ message: 'La carrera es obligatoria' })
-  @IsString({ message: 'La carrera debe ser un texto' })
-  career: string;
+  @IsNotEmpty({ message: 'Al menos una carrera es obligatoria' })
+  @IsArray({ message: 'Career IDs must be an array' })
+  @ArrayNotEmpty({ message: 'Career list cannot be empty' })
+  @IsNumber({}, { each: true, message: 'Each career ID must be a number' })
+  careerIds: number[];
 
   @IsNotEmpty({ message: 'La contraseña no puede estar vacía' })
   @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })

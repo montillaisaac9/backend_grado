@@ -8,13 +8,15 @@ import { IResponse } from 'src/common/interfaces/response.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminEmployee, Student } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import * as bcrypt from 'bcrypt';
 import LoginDto from './dto/login.dto';
 import RegisterEmployeeDto from './dto/registerEmployedDto.dto';
 import {
   PrismaErrorCode,
   PrismaErrorMessages,
 } from 'src/common/enums/codeErrorPrisma';
+import { Response } from 'express';
+import * as jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthenticationService {
@@ -32,7 +34,7 @@ export class AuthenticationService {
       // Encriptar la contraseña
       const hashedPassword = await bcrypt.hash(registration.password, 10);
 
-      // Crear el empleado en la base de datos
+      // Crear el empleado
       const newEmployee = await this.prisma.adminEmployee.create({
         data: {
           email: registration.email,
@@ -44,9 +46,28 @@ export class AuthenticationService {
         },
       });
 
+      // Crear las relaciones en la tabla intermedia
+      const careerConnections = registration.careerIds.map((careerId) => ({
+        adminEmployeeId: newEmployee.id,
+        careerId: careerId,
+      }));
+
+      // Insertar las relaciones en la tabla intermedia AdminEmployeeCareer
+      await this.prisma.adminEmployeeCareer.createMany({
+        data: careerConnections,
+      });
+
+      // Obtener el empleado actualizado con las relaciones de carrera conectadas
+      const employ = await this.prisma.adminEmployee.findUnique({
+        where: { id: newEmployee.id },
+        include: {
+          careers: true, // Incluye las carreras asociadas para la verificación
+        },
+      });
+
       return {
         success: true,
-        data: newEmployee,
+        data: employ,
         error: null,
       };
     } catch (error: unknown) {
@@ -67,28 +88,50 @@ export class AuthenticationService {
       const hashedPassword = await bcrypt.hash(registro.password, 10);
 
       // Crear el usuario en la base de datos
-      const nuevoEstudiante = await this.prisma.student.create({
+      const newStudent = await this.prisma.student.create({
         data: {
           email: registro.email,
           identification: registro.identification,
           name: registro.name,
-          career: registro.career,
           password: hashedPassword,
           securityWord: registro.securityWord,
           photo: registro.photo,
         },
       });
 
+      // Crear las relaciones en la tabla intermedia para conectar al estudiante con las carreras
+      const careerConnections = registro.careerIds.map((careerId) => ({
+        studentId: newStudent.id,
+        careerId: careerId,
+      }));
+
+      // Insertar las relaciones en la tabla intermedia StudentCareer
+      await this.prisma.studentCareer.createMany({
+        data: careerConnections,
+      });
+
+      // Obtener el estudiante actualizado con las relaciones de carrera conectadas
+      const student = await this.prisma.student.findUnique({
+        where: { id: newStudent.id },
+        include: {
+          careers: true, // Incluye las carreras asociadas al estudiante
+        },
+      });
+
       return {
         success: true,
-        data: nuevoEstudiante,
+        data: student,
         error: null,
       };
     } catch (error) {
       return this.handleErrors(error);
     }
   }
-  async login(loginDto: LoginDto): Promise<IResponse<Student | AdminEmployee>> {
+
+  async login(
+    loginDto: LoginDto,
+    res: Response,
+  ): Promise<IResponse<Student | AdminEmployee>> {
     try {
       const usuario = await this.buscarUsuarioPorRol(loginDto);
 
@@ -105,16 +148,31 @@ export class AuthenticationService {
         throw new BadRequestException('Contraseña incorrecta');
       }
 
+      // Generar el token JWT
+      const jwtSecret = process.env.JWT_SECRET || 'default_secret_value';
+      const token = jwt.sign(
+        { id: usuario.id, role: loginDto.role },
+        jwtSecret,
+        { expiresIn: '12h' },
+      );
+
+      // Setear la cookie en la respuesta
+      res.cookie('auth_token', token, {
+        httpOnly: true, // No accesible desde JavaScript
+        secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
+        sameSite: 'strict', // Protege contra CSRF
+        maxAge: 3600000, // 1 hora de duración
+      });
+
       return {
         success: true,
         data: usuario,
         error: null,
       };
-    } catch (error) {
+    } catch (error: any) {
       return this.handleErrors(error);
     }
   }
-
   findAll() {
     return `This action returns all authentication`;
   }
@@ -132,17 +190,41 @@ export class AuthenticationService {
       case 'admin':
         return this.prisma.adminEmployee.findFirst({
           where: { email: loginDto.email },
+          include: {
+            careers: {
+              select: {
+                career: {
+                  select: {
+                    name: true, // Solo traemos el nombre de la carrera
+                  },
+                },
+              },
+            },
+          },
         });
       case 'estudiante':
         return this.prisma.student.findFirst({
           where: { email: loginDto.email },
+          include: {
+            careers: {
+              select: {
+                career: {
+                  select: {
+                    name: true, // Solo traemos el nombre de la carrera
+                  },
+                },
+              },
+            },
+          },
         });
+
       default:
         throw new BadRequestException('Rol no válido');
     }
   }
 
   private handleErrors(error: any): never | IResponse<any> {
+    console.log(error);
     if (error instanceof BadRequestException) {
       throw error;
     }

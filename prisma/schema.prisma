@@ -29,8 +29,6 @@ model Student {
   securityWord   String @db.VarChar(100)
   attendances    Attendance[]
   comments       Comment[]
-
-  // Many-to-many relationship
   careers        StudentCareer[]
 }
 
@@ -42,8 +40,6 @@ model AdminEmployee {
   securityWord   String @db.VarChar(100)
   identification String @unique
   password       String
-
-  // Many-to-many relationship
   careers        AdminEmployeeCareer[]
 }
 
