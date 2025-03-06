@@ -1,63 +1,69 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  NotFoundException,
-  Res,
-} from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
 import { Response } from 'express';
-import RegisterEmployedDto from './dto/registerEmployedDto.dto';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import RegisterStudentDtoR from './dto/registerStudentDto.dto';
 import { AuthenticationService } from './authentication.service';
-import { IResponse } from 'src/common/interfaces/response.interface';
 import LoginDto from './dto/login.dto';
+import RegisterEmployeeDto from './dto/registerEmployedDto.dto';
+import { EmployeeDto } from './dto/empleado.dto';
+import { StudentDto } from './dto/student.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
+@ApiTags('Authentication')
 @Controller('authentication')
 export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
-  @Get(':id')
-  getUser(@Param('id') id: string): IResponse<any> {
-    if (id === '1') {
-      return {
-        success: true,
-        data: { id: 1, name: 'John Doe' },
-        error: null,
-      };
-    }
-    throw new NotFoundException('User not found');
-  }
-
+  @ApiOperation({ summary: 'Register an employee' })
+  @ApiResponse({
+    status: 201,
+    description: 'Employee registered successfully',
+    type: EmployeeDto,
+  })
   @Post('/register/employed')
-  createEmployed(@Body() createAuthenticationDto: RegisterEmployedDto) {
+  createEmployed(@Body() createAuthenticationDto: RegisterEmployeeDto) {
     return this.authenticationService.createEmployee(createAuthenticationDto);
   }
 
+  @ApiOperation({ summary: 'Register a student' })
+  @ApiResponse({
+    status: 201,
+    description: 'Student registered successfully',
+    type: StudentDto,
+  })
   @Post('/register/student')
   createStudent(@Body() createAuthenticationDto: RegisterStudentDtoR) {
     return this.authenticationService.createStudent(createAuthenticationDto);
   }
 
+  @ApiOperation({ summary: 'Login an employee or student' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    type: EmployeeDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Login successful',
+    type: StudentDto,
+  })
   @Post('/login')
-  login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(@Body() loginDto: LoginDto, @Res() res: Response) {
     return this.authenticationService.login(loginDto, res);
   }
-
-  @Get()
-  findAll() {
-    return this.authenticationService.findAll();
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @Post('/logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    return this.authenticationService.logout(res);
   }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authenticationService.findOne(+id);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authenticationService.remove(+id);
+  @ApiOperation({ summary: 'Change Password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Change Password successful',
+  })
+  @Post('/changePassword')
+  changePassword(@Body() createAuthenticationDto: ChangePasswordDto) {
+    return this.authenticationService.changePassword(createAuthenticationDto);
   }
 }

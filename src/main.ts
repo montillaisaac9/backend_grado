@@ -14,7 +14,7 @@ async function bootstrap() {
     .setTitle('API del Sistema de Comedor')
     .setDescription('Documentación de la API del comedor universitario')
     .setVersion('1.0')
-    .addBearerAuth() // Si usas autenticación con JWT
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);

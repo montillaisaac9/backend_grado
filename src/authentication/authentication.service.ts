@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { IResponse } from 'src/common/interfaces/response.interface';
 import { PrismaService } from '../prisma/prisma.service';
-import { AdminEmployee, Student } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import LoginDto from './dto/login.dto';
 import RegisterEmployeeDto from './dto/registerEmployedDto.dto';
@@ -17,6 +16,9 @@ import {
 import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
+import { EmployeeDto } from './dto/empleado.dto';
+import { StudentDto } from './dto/student.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthenticationService {
@@ -24,14 +26,8 @@ export class AuthenticationService {
 
   async createEmployee(
     registration: RegisterEmployeeDto,
-  ): Promise<IResponse<AdminEmployee>> {
+  ): Promise<IResponse<EmployeeDto>> {
     try {
-      // Validar que la contraseña no esté vacía
-      if (!registration.password || registration.password.trim().length === 0) {
-        throw new BadRequestException('Password cannot be empty');
-      }
-
-      // Encriptar la contraseña
       const hashedPassword = await bcrypt.hash(registration.password, 10);
 
       // Crear el empleado
@@ -61,13 +57,40 @@ export class AuthenticationService {
       const employ = await this.prisma.adminEmployee.findUnique({
         where: { id: newEmployee.id },
         include: {
-          careers: true, // Incluye las carreras asociadas para la verificación
+          careers: {
+            include: {
+              career: {
+                // Asegurar que traemos los detalles de la carrera
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
 
+      if (!employ) {
+        throw new Error('Employee not found after creation');
+      }
+
+      // Aplicar DTO
+      const employeeDto: EmployeeDto = {
+        id: employ.id,
+        email: employ.email,
+        identification: employ.identification,
+        name: employ.name,
+        position: employ.position,
+        careers: employ.careers.map((careerConnection) => ({
+          id: careerConnection.career.id,
+          name: careerConnection.career.name,
+        })),
+      };
+
       return {
         success: true,
-        data: employ,
+        data: employeeDto,
         error: null,
       };
     } catch (error: unknown) {
@@ -77,7 +100,7 @@ export class AuthenticationService {
 
   async createStudent(
     registro: RegisterStudentDtoR,
-  ): Promise<IResponse<Student>> {
+  ): Promise<IResponse<StudentDto>> {
     try {
       // Validación de la contraseña (ya que ValidationPipe no valida si es opcional)
       if (!registro.password || registro.password.trim().length === 0) {
@@ -114,16 +137,43 @@ export class AuthenticationService {
       const student = await this.prisma.student.findUnique({
         where: { id: newStudent.id },
         include: {
-          careers: true, // Incluye las carreras asociadas al estudiante
+          careers: {
+            include: {
+              career: {
+                // Asegurar que traemos los detalles de la carrera
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
 
+      if (!student) {
+        throw new Error('Student not found after creation');
+      }
+
+      // Aplicar DTO
+      const studentDto: StudentDto = {
+        id: student.id,
+        email: student.email,
+        identification: student.identification,
+        name: student.name,
+        photo: student.photo,
+        careers: student.careers.map((careerConnection) => ({
+          id: careerConnection.career.id,
+          name: careerConnection.career.name,
+        })),
+      };
+
       return {
         success: true,
-        data: student,
+        data: studentDto,
         error: null,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       return this.handleErrors(error);
     }
   }
@@ -131,14 +181,18 @@ export class AuthenticationService {
   async login(
     loginDto: LoginDto,
     res: Response,
-  ): Promise<IResponse<Student | AdminEmployee>> {
+  ): Promise<IResponse<StudentDto | EmployeeDto>> {
     try {
-      const usuario = await this.buscarUsuarioPorRol(loginDto);
+      const usuario = await this.buscarUsuarioPorRol(
+        loginDto.email,
+        loginDto.role,
+      );
 
       if (!usuario) {
         throw new BadRequestException('Correo no registrado');
       }
 
+      // Validar la contraseña
       const contraseñaValida = await bcrypt.compare(
         loginDto.password,
         usuario.password,
@@ -158,44 +212,72 @@ export class AuthenticationService {
 
       // Setear la cookie en la respuesta
       res.cookie('auth_token', token, {
-        httpOnly: true, // No accesible desde JavaScript
-        secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
-        sameSite: 'strict', // Protege contra CSRF
-        maxAge: 3600000, // 1 hora de duración
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        expires: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
       });
+
+      // Mapeo del DTO basado en el rol
+      let usuarioDto: StudentDto | EmployeeDto;
+
+      if (loginDto.role === 'estudiante' && usuario.careers) {
+        usuarioDto = {
+          id: usuario.id,
+          email: usuario.email,
+          identification: usuario.identification,
+          name: usuario.name,
+          photo: 'photo' in usuario ? (usuario.photo ?? '') : '',
+          careers: usuario.careers.map((careerConnection) => ({
+            id: careerConnection.career.id,
+            name: careerConnection.career.name,
+          })),
+        };
+      } else if (loginDto.role === 'empleado' && usuario.careers) {
+        usuarioDto = {
+          id: usuario.id,
+          email: usuario.email,
+          name: usuario.name,
+          position: 'position' in usuario ? usuario.position : '',
+          identification: usuario.identification,
+          careers: usuario.careers.map((careerConnection) => ({
+            id: careerConnection.career.id,
+            name: careerConnection.career.name,
+          })),
+        };
+      } else {
+        throw new BadRequestException('Rol no válido o usuario no encontrado');
+      }
 
       return {
         success: true,
-        data: usuario,
+        data: usuarioDto,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return this.handleErrors(error);
     }
   }
-  findAll() {
-    return `This action returns all authentication`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} authentication`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} authentication`;
-  }
-
-  private async buscarUsuarioPorRol(loginDto: LoginDto) {
-    switch (loginDto.role) {
-      case 'admin':
+  private async buscarUsuarioPorRol(email: string, role: string) {
+    switch (role) {
+      case 'empleado':
         return this.prisma.adminEmployee.findFirst({
-          where: { email: loginDto.email },
-          include: {
+          where: { email: email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            position: true,
+            password: true,
+            securityWord: true,
+            identification: true,
             careers: {
               select: {
                 career: {
                   select: {
-                    name: true, // Solo traemos el nombre de la carrera
+                    id: true,
+                    name: true, // Solo tomamos el ID y el nombre de la carrera
                   },
                 },
               },
@@ -204,13 +286,21 @@ export class AuthenticationService {
         });
       case 'estudiante':
         return this.prisma.student.findFirst({
-          where: { email: loginDto.email },
-          include: {
+          where: { email: email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            identification: true,
+            securityWord: true,
+            photo: true,
             careers: {
               select: {
                 career: {
                   select: {
-                    name: true, // Solo traemos el nombre de la carrera
+                    id: true,
+                    name: true, // Solo tomamos el ID y el nombre de la carrera
                   },
                 },
               },
@@ -252,5 +342,56 @@ export class AuthenticationService {
       }
     }
     throw new InternalServerErrorException('Error inesperado en el servidor');
+  }
+
+  logout(response: Response): IResponse<null> {
+    response.clearCookie('auth_token');
+    return {
+      success: true,
+      data: null,
+      error: null,
+    };
+  }
+
+  async changePassword(
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<IResponse<null>> {
+    try {
+      const usuario = await this.buscarUsuarioPorRol(
+        changePasswordDto.email,
+        changePasswordDto.role,
+      );
+      if (usuario?.password !== changePasswordDto.palabra_seguridad) {
+        throw new BadRequestException('Palabra de seguridad incorrecta');
+      }
+      const hashedPassword = await bcrypt.hash(
+        changePasswordDto.newPassword,
+        10,
+      );
+      if (changePasswordDto.role === 'empleado') {
+        await this.prisma.adminEmployee.update({
+          where: { id: usuario.id },
+          data: {
+            password: hashedPassword,
+          },
+        });
+      } else if (changePasswordDto.role === 'estudiante') {
+        await this.prisma.student.update({
+          where: { id: usuario.id },
+          data: {
+            password: hashedPassword,
+          },
+        });
+      } else {
+        throw new BadRequestException('Rol no válido');
+      }
+      return {
+        success: true,
+        data: null,
+        error: null,
+      };
+    } catch (error) {
+      return this.handleErrors(error);
+    }
   }
 }

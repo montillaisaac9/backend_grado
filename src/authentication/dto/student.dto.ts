@@ -1,21 +1,22 @@
-export class EstudianteDTO {
-  id: number;
-  correo: string;
-  cedula: string;
-  nombre: string;
-  carrera: string;
-  contraseña: string;
-  palabra_seguridad: string;
-  foto?: string;
+import { ApiProperty } from '@nestjs/swagger';
+import { CareerDto } from './careerDto.dto';
 
-  constructor(data: Partial<EstudianteDTO>) {
-    this.id = data.id ?? 0;
-    this.correo = data.correo ?? '';
-    this.cedula = data.cedula ?? '';
-    this.nombre = data.nombre ?? '';
-    this.carrera = data.carrera ?? '';
-    this.contraseña = data.contraseña ?? '';
-    this.palabra_seguridad = data.palabra_seguridad ?? '';
-    this.foto = data.foto ?? '';
-  }
+export class StudentDto {
+  @ApiProperty({ example: 2 })
+  id: number;
+
+  @ApiProperty({ example: 'estudiante@unerg.edu.ve' })
+  email: string;
+
+  @ApiProperty({ example: '87654321' })
+  identification: string;
+
+  @ApiProperty({ example: 'María González' })
+  name: string;
+
+  @ApiProperty({ example: 'foto_url.jpg' })
+  photo: string | null;
+
+  @ApiProperty({ type: [CareerDto] })
+  careers: CareerDto[];
 }

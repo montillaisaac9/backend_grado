@@ -1,19 +1,22 @@
-export class EmpleadoAdminDTO {
-  id: number;
-  correo: string;
-  nombre: string;
-  cargo: string;
-  palabra_seguridad: string;
-  cedula: string;
-  contrasena: string;
+import { ApiProperty } from '@nestjs/swagger';
+import { CareerDto } from './careerDto.dto';
 
-  constructor(data: Partial<EmpleadoAdminDTO>) {
-    this.id = data.id ?? 0;
-    this.correo = data.correo ?? '';
-    this.nombre = data.nombre ?? '';
-    this.cargo = data.cargo ?? '';
-    this.palabra_seguridad = data.palabra_seguridad ?? '';
-    this.cedula = data.cedula ?? '';
-    this.contrasena = data.contrasena ?? '';
-  }
+export class EmployeeDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'profesor@unerg.edu.ve' })
+  email: string;
+
+  @ApiProperty({ example: '12345678' })
+  identification: string;
+
+  @ApiProperty({ example: 'Juan Pérez' })
+  name: string;
+
+  @ApiProperty({ example: 'Docente' })
+  position: string;
+
+  @ApiProperty({ type: [CareerDto] })
+  careers: CareerDto[];
 }
