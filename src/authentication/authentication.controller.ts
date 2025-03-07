@@ -49,7 +49,8 @@ export class AuthenticationController {
   })
   @Post('/login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
-    return this.authenticationService.login(loginDto, res);
+    const response = await this.authenticationService.login(loginDto, res);
+    return res.json(response);
   }
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logout successful' })

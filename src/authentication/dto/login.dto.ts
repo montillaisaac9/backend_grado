@@ -19,7 +19,7 @@ export default class LoginDto {
     example: 'admin',
     description: 'User role, either admin or student',
   })
-  @IsEnum(['admin', 'estudiante'], {
+  @IsEnum(['empleado', 'estudiante'], {
     message: 'El rol debe ser admin o estudiante',
   })
   role: 'empleado' | 'estudiante';
