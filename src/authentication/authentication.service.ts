@@ -362,7 +362,7 @@ export class AuthenticationService {
         changePasswordDto.role,
       );
       if (usuario?.securityWord !== changePasswordDto.securityWord) {
-        console.log(usuario)
+        console.log(usuario);
         throw new BadRequestException('Palabra de seguridad incorrecta');
       }
       const hashedPassword = await bcrypt.hash(
