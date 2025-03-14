@@ -1,24 +1,16 @@
 import RegisterStudentDtoR from './dto/registerStudentDto.dto';
-import {
-  Injectable,
-  InternalServerErrorException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { IResponse } from 'src/common/interfaces/response.interface';
 import { PrismaService } from '../prisma/prisma.service';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import LoginDto from './dto/login.dto';
 import RegisterEmployeeDto from './dto/registerEmployedDto.dto';
-import {
-  PrismaErrorCode,
-  PrismaErrorMessages,
-} from 'src/common/enums/codeErrorPrisma';
 import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 import { EmployeeDto } from './dto/empleado.dto';
 import { StudentDto } from './dto/student.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { handleErrors } from 'src/common/utils/error-handler';
 
 @Injectable()
 export class AuthenticationService {
@@ -94,20 +86,21 @@ export class AuthenticationService {
         error: null,
       };
     } catch (error: unknown) {
-      return this.handleErrors(error);
+      return handleErrors<EmployeeDto>(error);
     }
   }
 
   async createStudent(
     registro: RegisterStudentDtoR,
+    url: string,
   ): Promise<IResponse<StudentDto>> {
     try {
       // Validación de la contraseña (ya que ValidationPipe no valida si es opcional)
       if (!registro.password || registro.password.trim().length === 0) {
         throw new BadRequestException('La contraseña no puede estar vacía');
       }
-
-      // Encriptar contraseña
+      console.log(url);
+      // Encriptar la contraseña
       const hashedPassword = await bcrypt.hash(registro.password, 10);
 
       // Crear el usuario en la base de datos
@@ -118,14 +111,14 @@ export class AuthenticationService {
           name: registro.name,
           password: hashedPassword,
           securityWord: registro.securityWord,
-          photo: registro.photo,
+          photo: `http://localhost:3000/${url}`,
         },
       });
 
       // Crear las relaciones en la tabla intermedia para conectar al estudiante con las carreras
       const careerConnections = registro.careerIds.map((careerId) => ({
         studentId: newStudent.id,
-        careerId: careerId,
+        careerId: Number(careerId),
       }));
 
       // Insertar las relaciones en la tabla intermedia StudentCareer
@@ -140,7 +133,6 @@ export class AuthenticationService {
           careers: {
             include: {
               career: {
-                // Asegurar que traemos los detalles de la carrera
                 select: {
                   id: true,
                   name: true,
@@ -174,7 +166,7 @@ export class AuthenticationService {
         error: null,
       };
     } catch (error: unknown) {
-      return this.handleErrors(error);
+      return handleErrors(error);
     }
   }
 
@@ -255,7 +247,7 @@ export class AuthenticationService {
         error: null,
       };
     } catch (error) {
-      return this.handleErrors(error);
+      return handleErrors(error);
     }
   }
 
@@ -313,37 +305,6 @@ export class AuthenticationService {
     }
   }
 
-  private handleErrors(error: any): never | IResponse<any> {
-    console.log(error);
-    if (error instanceof BadRequestException) {
-      throw error;
-    }
-    if (error instanceof PrismaClientKnownRequestError) {
-      const errorMessage =
-        PrismaErrorMessages[error.code as PrismaErrorCode] || 'Database error';
-
-      const errorCode = error.code as PrismaErrorCode;
-      switch (errorCode) {
-        case PrismaErrorCode.UniqueConstraintViolation:
-        case PrismaErrorCode.RecordNotFound:
-        case PrismaErrorCode.ForeignKeyConstraintViolation:
-        case PrismaErrorCode.InvalidFieldValue:
-        case PrismaErrorCode.RelationDoesNotExist:
-          throw new BadRequestException(errorMessage);
-
-        case PrismaErrorCode.QueryTimeout:
-          throw new InternalServerErrorException(errorMessage);
-
-        default:
-          throw new InternalServerErrorException(
-            PrismaErrorMessages[PrismaErrorCode.UnhandledError] ||
-              'Unhandled database error',
-          );
-      }
-    }
-    throw new InternalServerErrorException('Error inesperado en el servidor');
-  }
-
   logout(response: Response): IResponse<null> {
     response.clearCookie('auth_token');
     return {
@@ -392,7 +353,7 @@ export class AuthenticationService {
         error: null,
       };
     } catch (error) {
-      return this.handleErrors(error);
+      return handleErrors(error);
     }
   }
 }

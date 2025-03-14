@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuthenticationService } from './authentication.service';
-import { AuthenticationController } from './authentication.controller';
+import { DishService } from './dish.service';
+import { DishController } from './dish.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'fs';
@@ -12,7 +12,7 @@ import { diskStorage } from 'multer';
     MulterModule.register({
       storage: diskStorage({
         destination: (req, file, cb) => {
-          const uploadPath = './uploads/images/students';
+          const uploadPath = './uploads/images/dish';
           if (!existsSync(uploadPath)) {
             mkdirSync(uploadPath, { recursive: true });
           }
@@ -24,7 +24,7 @@ import { diskStorage } from 'multer';
       }),
     }),
   ],
-  controllers: [AuthenticationController],
-  providers: [AuthenticationService],
+  controllers: [DishController],
+  providers: [DishService],
 })
-export class AuthenticationModule {}
+export class DishModule {}

@@ -1,4 +1,11 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import RegisterStudentDtoR from './dto/registerStudentDto.dto';
@@ -8,6 +15,7 @@ import RegisterEmployeeDto from './dto/registerEmployedDto.dto';
 import { EmployeeDto } from './dto/empleado.dto';
 import { StudentDto } from './dto/student.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Authentication')
 @Controller('authentication')
@@ -32,8 +40,15 @@ export class AuthenticationController {
     type: StudentDto,
   })
   @Post('/register/student')
-  createStudent(@Body() createAuthenticationDto: RegisterStudentDtoR) {
-    return this.authenticationService.createStudent(createAuthenticationDto);
+  @UseInterceptors(FileInterceptor('image'))
+  createStudent(
+    @Body() createAuthenticationDto: RegisterStudentDtoR,
+    @UploadedFile() image: Express.Multer.File,
+  ) {
+    return this.authenticationService.createStudent(
+      createAuthenticationDto,
+      image.path,
+    );
   }
 
   @ApiOperation({ summary: 'Login an employee or student' })

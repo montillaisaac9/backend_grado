@@ -9,6 +9,7 @@ import {
   IsNumber,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export default class RegisterStudentDto {
   @ApiProperty({
@@ -35,11 +36,12 @@ export default class RegisterStudentDto {
   @IsString({ message: 'El nombre debe ser un texto' })
   name: string;
 
-  @ApiProperty({ example: [1, 2], description: 'Array of career IDs' })
-  @IsNotEmpty({ message: 'Al menos una carrera es obligatoria' })
   @IsArray({ message: 'Career IDs must be an array' })
   @ArrayNotEmpty({ message: 'Career list cannot be empty' })
   @IsNumber({}, { each: true, message: 'Each career ID must be a number' })
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map(Number) : [Number(value)],
+  )
   careerIds: number[];
 
   @ApiProperty({
@@ -64,6 +66,5 @@ export default class RegisterStudentDto {
     required: false,
   })
   @IsOptional()
-  @IsString({ message: 'La foto debe ser una URL válida' })
-  photo?: string;
+  Image?: Express.Multer.File;
 }
