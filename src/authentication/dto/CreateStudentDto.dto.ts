@@ -11,7 +11,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
-export default class RegisterStudentDto {
+export default class CreateStudentDto {
   @ApiProperty({
     example: 'student@example.com',
     description: 'Valid email address',

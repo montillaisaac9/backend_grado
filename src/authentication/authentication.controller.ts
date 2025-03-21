@@ -5,17 +5,22 @@ import {
   Res,
   UseInterceptors,
   UploadedFile,
+  Get,
+  Param,
+  Patch,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import RegisterStudentDtoR from './dto/registerStudentDto.dto';
+import RegisterStudentDtoR from './dto/CreateStudentDto.dto';
 import { AuthenticationService } from './authentication.service';
 import LoginDto from './dto/login.dto';
-import RegisterEmployeeDto from './dto/registerEmployedDto.dto';
+import RegisterEmployeeDto from './dto/CreateEmployedDto.dto';
 import { EmployeeDto } from './dto/empleado.dto';
 import { StudentDto } from './dto/student.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateStudentDto } from './dto/UpdateStudentDto';
+import { UpdateEmplyedDto } from './dto/UpdateEmployedDto';
 
 @ApiTags('Authentication')
 @Controller('authentication')
@@ -81,5 +86,69 @@ export class AuthenticationController {
   @Post('/changePassword')
   changePassword(@Body() createAuthenticationDto: ChangePasswordDto) {
     return this.authenticationService.changePassword(createAuthenticationDto);
+  }
+  @ApiOperation({ summary: 'Get profile of an student' })
+  @ApiResponse({
+    status: 200,
+    description: 'View profile successfully',
+    type: EmployeeDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
+  @Get('/student/:id')
+  async PerfilStudent(@Param('id') id: string) {
+    return this.authenticationService.getPerfilStudent(parseInt(id));
+  }
+  @ApiOperation({ summary: 'Get profile of an student' })
+  @ApiResponse({
+    status: 201,
+    description: 'Profile retrieved successfully',
+    type: StudentDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
+  @Get('/employed/:id')
+  async PerfilEmployed(@Param('id') id: string) {
+    return this.authenticationService.getPerfilEmployed(parseInt(id));
+  }
+  @ApiOperation({ summary: 'edit perfil a student' })
+  @ApiResponse({
+    status: 201,
+    description: 'Student update successfully',
+    type: StudentDto,
+  })
+  @Patch('/student/:id')
+  @UseInterceptors(FileInterceptor('image'))
+  editStudent(
+    @Param('id') id: string,
+    @Body() updateAuthenticationDto: UpdateStudentDto,
+    @UploadedFile() image?: Express.Multer.File,
+  ) {
+    return this.authenticationService.editProfileStudent(
+      parseInt(id),
+      updateAuthenticationDto,
+      image ? image.path : undefined,
+    );
+  }
+  @ApiOperation({ summary: 'edit perfil a student' })
+  @ApiResponse({
+    status: 201,
+    description: 'Student update successfully',
+    type: StudentDto,
+  })
+  @Patch('/employed/:id')
+  @UseInterceptors(FileInterceptor('image'))
+  editEmployed(
+    @Param('id') id: string,
+    @Body() updateAuthenticationDto: UpdateEmplyedDto,
+  ) {
+    return this.authenticationService.editProfileEmployed(
+      parseInt(id),
+      updateAuthenticationDto,
+    );
   }
 }

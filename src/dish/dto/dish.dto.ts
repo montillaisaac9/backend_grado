@@ -5,4 +5,9 @@ export default class DishDto {
   ratingPercentage?: number;
   votesCount: number;
   photo: string | null;
+  cost: number;
+  calories: number;
+  proteins: number;
+  fats: number;
+  carbohydrates: number;
 }

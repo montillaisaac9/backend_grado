@@ -70,9 +70,15 @@ model Dish {
   ratingPercentage    Float?
   votesCount          Int     @default(0)
   photo               String?
+  cost                Float   // Costo del platillo
+  calories            Int     // Calorías en kcal
+  proteins            Float   // Proteínas en gramos
+  fats                Float   // Grasas en gramos
+  carbohydrates       Float   // Carbohidratos en gramos
   menus               Menu[]
   comments            Comment[]
 }
+
 
 model Menu {
   id          Int        @id @default(autoincrement())

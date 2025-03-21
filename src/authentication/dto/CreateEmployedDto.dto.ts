@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class RegisterEmployeeDto {
+export default class CreateEmployeeDto {
   @ApiProperty({
     example: 'user@example.com',
     description: 'Valid email address',

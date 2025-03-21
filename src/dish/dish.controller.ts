@@ -13,6 +13,7 @@ import { DishService } from './dish.service';
 import CreateDishDto from './dto/create-dish.dto';
 import { UpdateDishDto } from './dto/update-dish.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { PaginationDto } from 'src/common/dto/paginationParams.dto';
 
 @Controller('dish')
 export class DishController {
@@ -27,9 +28,9 @@ export class DishController {
     return this.dishService.create(createDishDto, image.path);
   }
 
-  @Get()
-  findAll() {
-    return this.dishService.findAll();
+  @Post('/all')
+  findAll(@Body() pagination: PaginationDto) {
+    return this.dishService.getAllDish(pagination);
   }
 
   @Get(':id')
