@@ -15,15 +15,16 @@ export class DishService {
 
   async create(
     registro: CreateDishDto,
-    url: string,
+    url: string | undefined = undefined,
   ): Promise<IResponse<DishDto>> {
     try {
+      console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa")
       // Crear el plato en la base de datos
       const newDish = await this.prisma.dish.create({
         data: {
           title: registro.title,
           description: registro.description,
-          photo: `http://localhost:3000/${url}`,
+          photo: url ? `http://localhost:3000/${url}` : undefined,
           cost: parseFloat(registro.cost.toString()),
           calories: parseInt(registro.calories.toString()),
           carbohydrates: parseFloat(registro.carbohydrates.toString()),

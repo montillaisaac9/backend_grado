@@ -6,106 +6,158 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-model Career {
-  id          Int      @id @default(autoincrement()) // Unique identifier for the career
-  name        String   @unique                      // Career name, unique
-  description String?  // Optional description of the career
-  createdAt   DateTime @default(now())               // Creation date, defaults to the current date
-  isActive    Boolean  @default(true)                 // Indicates whether the career is active (true) or not (false)
-
-  // Many-to-many relationships
-  students       StudentCareer[]
-  adminEmployees AdminEmployeeCareer[]
+}// Enumeración de roles de usuario
+enum Role {
+  STUDENT
+  ADMIN
+  EMPLOYEE
 }
 
-model Student {
-  id             Int    @id @default(autoincrement())
-  email          String @unique
-  identification String @unique
+model User {
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  identification String          @unique
   name           String
   password       String
   photo          String?
-  securityWord   String @db.VarChar(100)
+  securityWord   String          @db.VarChar(100)
+  role           Role            @default(STUDENT)
+  position       String?         // Solo para empleados
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  
+  // Relaciones
   attendances    Attendance[]
   comments       Comment[]
-  careers        StudentCareer[]
+  surveys        Survey[]
+  careers        UserCareer[]
 }
 
-model AdminEmployee {
-  id             Int    @id @default(autoincrement())
-  email          String @unique
-  name           String
-  position       String
-  securityWord   String @db.VarChar(100)
-  identification String @unique
-  password       String
-  careers        AdminEmployeeCareer[]
+model Career {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  isActive    Boolean     @default(true)
+  
+  // Relación muchos a muchos con usuarios
+  users       UserCareer[]
 }
 
-// Intermediate table for Student-Career relationship (Many-to-Many)
-model StudentCareer {
-  studentId  Int
-  careerId   Int
-  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  career     Career  @relation(fields: [careerId], references: [id], onDelete: Cascade)
-
-  @@id([studentId, careerId]) // Composite primary key
-}
-
-// Intermediate table for AdminEmployee-Career relationship (Many-to-Many)
-model AdminEmployeeCareer {
-  adminEmployeeId Int
-  careerId        Int
-  adminEmployee   AdminEmployee @relation(fields: [adminEmployeeId], references: [id], onDelete: Cascade)
-  career          Career        @relation(fields: [careerId], references: [id], onDelete: Cascade)
-
-  @@id([adminEmployeeId, careerId]) // Composite primary key
+// Tabla intermedia para relación User-Career (Muchos a Muchos)
+model UserCareer {
+  userId    Int
+  careerId  Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  career    Career  @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  
+  @@id([userId, careerId]) // Clave primaria compuesta
 }
 
 model Dish {
-  id                  Int     @id @default(autoincrement())
-  title               String
-  description         String
-  ratingPercentage    Float?
-  votesCount          Int     @default(0)
-  photo               String?
-  cost                Float   // Costo del platillo
-  calories            Int     // Calorías en kcal
-  proteins            Float   // Proteínas en gramos
-  fats                Float   // Grasas en gramos
-  carbohydrates       Float   // Carbohidratos en gramos
-  menus               Menu[]
-  comments            Comment[]
+  id             Int       @id @default(autoincrement())
+  title          String
+  description    String
+  photo          String?
+  cost           Float     // Costo del platillo
+  calories       Int       // Calorías en kcal
+  proteins       Float     // Proteínas en gramos
+  fats           Float     // Grasas en gramos
+  carbohydrates  Float     // Carbohidratos en gramos
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  // Relaciones
+  menuItems      MenuItem[]
+  comments       Comment[]
+  surveyAnswers  SurveyAnswer[]
 }
 
-
 model Menu {
-  id          Int        @id @default(autoincrement())
-  date        DateTime
-  dayOfWeek   String
-  time        DateTime
-  dish        Dish       @relation(fields: [dishId], references: [id])
-  dishId      Int
+  id          Int         @id @default(autoincrement())
+  date        DateTime    // Fecha del menú
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Relaciones
+  menuItems   MenuItem[]
   attendances Attendance[]
+}
+
+model MenuItem {
+  id          Int       @id @default(autoincrement())
+  menuId      Int
+  dishId      Int
+  menu        Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  dish        Dish      @relation(fields: [dishId], references: [id], onDelete: Restrict)
+  
+  @@unique([menuId, dishId]) // Un plato solo puede aparecer una vez en el mismo menú
 }
 
 model Attendance {
   id          Int       @id @default(autoincrement())
-  student     Student   @relation(fields: [studentId], references: [id])
-  studentId   Int
-  menu        Menu      @relation(fields: [menuId], references: [id])
+  userId      Int
   menuId      Int
-  date        DateTime
-  time        DateTime
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menu        Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  
+  @@unique([userId, menuId]) // Un usuario solo puede registrar asistencia una vez por menú
 }
 
 model Comment {
   id          Int       @id @default(autoincrement())
   text        String
-  student     Student   @relation(fields: [studentId], references: [id])
-  studentId   Int
-  dish        Dish      @relation(fields: [dishId], references: [id])
+  userId      Int
   dishId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dish        Dish      @relation(fields: [dishId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
+}
+
+// Modelo para encuestas de satisfacción
+model Survey {
+  id          Int            @id @default(autoincrement())
+  userId      Int
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  
+  // Relaciones
+  answers     SurveyAnswer[]
+}
+
+model SurveyAnswer {
+  id          Int       @id @default(autoincrement())
+  surveyId    Int
+  dishId      Int
+  rating      Int       // Valoración de 1-5
+  comment     String?   // Comentario opcional
+  survey      Survey    @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  dish        Dish      @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  
+  @@unique([surveyId, dishId]) // Una encuesta solo puede tener una valoración por plato
+}
+
+// Configuración para estadísticas y reportes
+model Stats {
+  id              Int       @id @default(autoincrement())
+  date            DateTime  @unique // Fecha de las estadísticas
+  totalAttendance Int       // Total de asistencias
+  budgetUsed      Float     // Presupuesto utilizado
+  wastagePercent  Float?    // Porcentaje de desperdicio
+  createdAt       DateTime  @default(now())
+}
+
+// Notificaciones para usuarios
+model Notification {
+  id          Int       @id @default(autoincrement())
+  title       String
+  message     String
+  type        String    // Tipo de notificación (sistema, menú, encuesta)
+  createdAt   DateTime  @default(now())
+  isActive    Boolean   @default(true)
 }

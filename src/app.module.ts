@@ -7,6 +7,7 @@ import { FilesModule } from './files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DishModule } from './dish/dish.module';
+import { MenuModule } from './menu/menu.module';
 
 @Module({
   controllers: [AppController],
@@ -20,6 +21,7 @@ import { DishModule } from './dish/dish.module';
       serveRoot: '/uploads', // Ruta desde donde se acceden los archivos
     }),
     DishModule,
+    MenuModule,
   ],
 })
 export class AppModule {}

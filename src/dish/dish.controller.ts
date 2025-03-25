@@ -23,9 +23,12 @@ export class DishController {
   @UseInterceptors(FileInterceptor('image'))
   create(
     @Body() createDishDto: CreateDishDto,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() image: Express.Multer.File | undefined,
   ) {
-    return this.dishService.create(createDishDto, image.path);
+    return this.dishService.create(
+      createDishDto,
+      image ? image.path : undefined,
+    );
   }
 
   @Post('/all')

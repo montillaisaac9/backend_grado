@@ -7,13 +7,15 @@ import {
   IsArray,
   ArrayNotEmpty,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { Role } from '@prisma/client';
 
-export default class CreateStudentDto {
+export default class CreateUserDto {
   @ApiProperty({
-    example: 'student@example.com',
+    example: 'user@example.com',
     description: 'Valid email address',
   })
   @IsEmail({}, { message: 'El correo no es válido' })
@@ -28,21 +30,10 @@ export default class CreateStudentDto {
   @IsString({ message: 'La cédula debe ser un texto' })
   identification: string;
 
-  @ApiProperty({
-    example: 'Juan Pérez',
-    description: 'Full name of the student',
-  })
+  @ApiProperty({ example: 'Juan Pérez', description: 'Full name of the user' })
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
   @IsString({ message: 'El nombre debe ser un texto' })
   name: string;
-
-  @IsArray({ message: 'Career IDs must be an array' })
-  @ArrayNotEmpty({ message: 'Career list cannot be empty' })
-  @IsNumber({}, { each: true, message: 'Each career ID must be a number' })
-  @Transform(({ value }) =>
-    Array.isArray(value) ? value.map(Number) : [Number(value)],
-  )
-  careerIds: number[];
 
   @ApiProperty({
     example: 'securePassword123',
@@ -60,11 +51,46 @@ export default class CreateStudentDto {
   @IsString({ message: 'La palabra de seguridad debe ser un texto' })
   securityWord: string;
 
+  @ApiProperty({ example: Role.STUDENT, enum: Role, description: 'User role' })
+  @IsEnum(Role, { message: 'El rol debe ser STUDENT, ADMIN o EMPLOYEE' })
+  @IsNotEmpty({ message: 'El rol es obligatorio' })
+  role: Role;
+
+  @ApiProperty({
+    example: 'Manager',
+    description: 'Position in case of an employee',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'El cargo debe ser un texto' })
+  position?: string;
+
   @ApiProperty({
     example: 'https://example.com/photo.jpg',
     description: 'Profile photo URL',
     required: false,
   })
   @IsOptional()
-  Image?: Express.Multer.File;
+  photo?: string;
+
+  @ApiProperty({
+    example: true,
+    description: 'User active status',
+    required: false,
+  })
+  @IsOptional()
+  isActive?: boolean;
+
+  @ApiProperty({
+    example: [1, 2],
+    description: 'List of career IDs',
+    required: false,
+  })
+  @IsArray({ message: 'Career IDs must be an array' })
+  @ArrayNotEmpty({ message: 'Career list cannot be empty' })
+  @IsNumber({}, { each: true, message: 'Each career ID must be a number' })
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map(Number) : [Number(value)],
+  )
+  careerIds: number[];
 }

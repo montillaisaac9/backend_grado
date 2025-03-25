@@ -52,4 +52,8 @@ export default class CreateDishDto {
   @IsNumber()
   @Min(0)
   carbohydrates: number;
+
+  @IsOptional()
+  @IsString()
+  isActive?: boolean = true;
 }

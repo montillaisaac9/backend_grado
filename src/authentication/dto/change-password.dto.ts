@@ -1,5 +1,6 @@
 // change-password.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
@@ -13,9 +14,10 @@ export class ChangePasswordDto {
   @IsEmail()
   email: string;
 
-  @ApiProperty({ description: 'Rol del usuario (admin o estudiante)' })
-  @IsEnum(['empleado', 'estudiante'])
-  role: 'empleado' | 'estudiante';
+  @ApiProperty({ example: Role.STUDENT, enum: Role, description: 'User role' })
+  @IsEnum(Role, { message: 'El rol debe ser STUDENT, ADMIN o EMPLOYEE' })
+  @IsNotEmpty({ message: 'El rol es obligatorio' })
+  role: Role;
 
   @ApiProperty({
     description: 'Palabra de seguridad del usuario',
