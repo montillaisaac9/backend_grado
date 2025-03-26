@@ -18,8 +18,7 @@ export class DishService {
     url: string | undefined = undefined,
   ): Promise<IResponse<DishDto>> {
     try {
-      console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa")
-      // Crear el plato en la base de datos
+      // Crear un nuevo plato en la base de datos
       const newDish = await this.prisma.dish.create({
         data: {
           title: registro.title,

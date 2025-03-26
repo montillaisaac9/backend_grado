@@ -1,23 +1,41 @@
-import { IsNotEmpty, IsBoolean, IsDateString, IsInt } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateMenuDto {
-  @ApiProperty({ example: '2025-03-25T00:00:00Z' })
+export class MenuDto {
+  @ApiProperty({ example: 1 })
   @IsNotEmpty()
-  @IsDateString()
-  weekStart: string; // Fecha de inicio de la semana
+  @IsInt()
+  id: number;
 
-  @ApiProperty({ example: '2025-03-29T00:00:00Z' })
+  @ApiProperty({ example: '2025-03-24T00:00:00Z' })
   @IsNotEmpty()
   @IsDateString()
-  weekEnd: string; // Fecha de fin de la semana
+  weekStart: string;
+
+  @ApiProperty({ example: '2025-03-28T23:59:59Z' })
+  @IsNotEmpty()
+  @IsDateString()
+  weekEnd: string;
 
   @ApiProperty({ example: true })
   @IsNotEmpty()
   @IsBoolean()
-  isActive: boolean; // Estado activo/inactivo del menú
+  isActive: boolean;
 
-  // Platos asignados a cada día de la semana
+  @ApiProperty({ example: '2025-03-24T00:00:00Z' })
+  @IsOptional()
+  createdAt: string;
+
+  @ApiProperty({ example: '2025-03-28T23:59:59Z' })
+  @IsOptional()
+  updatedAt: string;
+
   @ApiProperty({ example: 1 })
   @IsNotEmpty()
   @IsInt()

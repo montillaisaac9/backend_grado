@@ -30,8 +30,8 @@ model User {
   // Relaciones
   attendances    Attendance[]
   comments       Comment[]
-  surveys        Survey[]
   careers        UserCareer[]
+  dishRatings    DishRating[]
 }
 
 model Career {
@@ -57,45 +57,60 @@ model UserCareer {
 }
 
 model Dish {
-  id             Int       @id @default(autoincrement())
-  title          String
-  description    String
-  photo          String?
-  cost           Float     // Costo del platillo
-  calories       Int       // Calorías en kcal
-  proteins       Float     // Proteínas en gramos
-  fats           Float     // Grasas en gramos
-  carbohydrates  Float     // Carbohidratos en gramos
-  isActive       Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  
-  // Relaciones
-  menuItems      MenuItem[]
-  comments       Comment[]
-  surveyAnswers  SurveyAnswer[]
-}
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String
+  photo           String?
+  cost            Float     // Costo del platillo
+  calories        Int       // Calorías en kcal
+  proteins        Float     // Proteínas en gramos
+  fats            Float     // Grasas en gramos
+  carbohydrates   Float     // Carbohidratos en gramos
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
+  // Relación con las encuestas de satisfacción
+  comments        Comment[]
+
+  // Relación con los menús donde aparece este plato
+  mondayMenus     Menu[]    @relation("monday", fields: [], references: [])
+  tuesdayMenus    Menu[]    @relation("tuesday", fields: [], references: [])
+  wednesdayMenus  Menu[]    @relation("wednesday", fields: [], references: [])
+  thursdayMenus   Menu[]    @relation("thursday", fields: [], references: [])
+  fridayMenus     Menu[]    @relation("friday", fields: [], references: [])
+
+  // Relación con las estadísticas (por cada plato)
+  stats           Stats[]   @relation("DishStats")
+
+  // Relación con las puntuaciones de los platos
+  dishRatings     DishRating[]
+}
 model Menu {
-  id          Int         @id @default(autoincrement())
-  date        DateTime    // Fecha del menú
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
-  // Relaciones
-  menuItems   MenuItem[]
-  attendances Attendance[]
-}
+  id        Int      @id @default(autoincrement())
+  weekStart DateTime // Fecha de inicio de la semana
+  weekEnd   DateTime // Fecha de finalización de la semana
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-model MenuItem {
-  id          Int       @id @default(autoincrement())
-  menuId      Int
-  dishId      Int
-  menu        Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  dish        Dish      @relation(fields: [dishId], references: [id], onDelete: Restrict)
-  
-  @@unique([menuId, dishId]) // Un plato solo puede aparecer una vez en el mismo menú
+  // Platos para cada día de la semana
+  monday    Dish  @relation("monday", fields: [mondayId], references: [id])
+  mondayId  Int
+
+  tuesday   Dish  @relation("tuesday", fields: [tuesdayId], references: [id])
+  tuesdayId Int
+
+  wednesday Dish  @relation("wednesday", fields: [wednesdayId], references: [id])
+  wednesdayId Int
+
+  thursday  Dish  @relation("thursday", fields: [thursdayId], references: [id])
+  thursdayId Int
+
+  friday    Dish  @relation("friday", fields: [fridayId], references: [id])
+  fridayId  Int
+
+  attendances Attendance[]
 }
 
 model Attendance {
@@ -119,37 +134,36 @@ model Comment {
   createdAt   DateTime  @default(now())
 }
 
-// Modelo para encuestas de satisfacción
-model Survey {
-  id          Int            @id @default(autoincrement())
-  userId      Int
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime       @default(now())
-  
+model DishRating {
+  id         Int     @id @default(autoincrement())
+  userId     Int     // ID del usuario que calificó el plato
+  dishId     Int     // ID del plato calificado
+  statsId    Int     // ID de las estadísticas del día
+  rating     Float   // Puntuación del plato, un valor entre 1 y 5
+  createdAt  DateTime @default(now()) // Fecha en que se realizó la puntuación
+
   // Relaciones
-  answers     SurveyAnswer[]
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dish       Dish    @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  stats      Stats  @relation(fields: [statsId], references: [id], onDelete: Cascade)
+  @@unique([userId, dishId, statsId]) // Un usuario solo puede calificar un plato una vez
 }
 
-model SurveyAnswer {
-  id          Int       @id @default(autoincrement())
-  surveyId    Int
-  dishId      Int
-  rating      Int       // Valoración de 1-5
-  comment     String?   // Comentario opcional
-  survey      Survey    @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  dish        Dish      @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  
-  @@unique([surveyId, dishId]) // Una encuesta solo puede tener una valoración por plato
-}
 
-// Configuración para estadísticas y reportes
 model Stats {
   id              Int       @id @default(autoincrement())
   date            DateTime  @unique // Fecha de las estadísticas
   totalAttendance Int       // Total de asistencias
   budgetUsed      Float     // Presupuesto utilizado
   wastagePercent  Float?    // Porcentaje de desperdicio
+  avgDishRating   Float?    // Puntuación promedio de los platos
   createdAt       DateTime  @default(now())
+
+  // Relación con Dish (Platos)
+  dishes          Dish[]    @relation("DishStats")
+  
+  // Relación con DishRating
+  dishRatings     DishRating[]
 }
 
 // Notificaciones para usuarios

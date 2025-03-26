@@ -10,6 +10,7 @@ import {
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { PaginationDto } from 'src/common/dto/paginationParams.dto';
 
 @Controller('menu')
 export class MenuController {
@@ -20,14 +21,14 @@ export class MenuController {
     return this.menuService.create(createMenuDto);
   }
 
-  @Get()
-  findAll() {
-    return this.menuService.findAll();
+  @Post('/all')
+  findAll(@Body() pagination: PaginationDto) {
+    return this.menuService.getAllMenu(pagination);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.menuService.findOne(+id);
+    return this.menuService.findOne(parseInt(id));
   }
 
   @Patch(':id')
@@ -38,5 +39,10 @@ export class MenuController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.menuService.remove(+id);
+  }
+
+  @Post('/week')
+  weekMenu() {
+    return this.menuService.findWeekMenu();
   }
 }

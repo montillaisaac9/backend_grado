@@ -8,6 +8,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DishModule } from './dish/dish.module';
 import { MenuModule } from './menu/menu.module';
+import { AttendanceModule } from './attendance/attendance.module';
+import { CommentModule } from './comment/comment.module';
+import { DishRattingModule } from './dish-ratting/dish-ratting.module';
 
 @Module({
   controllers: [AppController],
@@ -22,6 +25,9 @@ import { MenuModule } from './menu/menu.module';
     }),
     DishModule,
     MenuModule,
+    AttendanceModule,
+    CommentModule,
+    DishRattingModule,
   ],
 })
 export class AppModule {}
