@@ -5,12 +5,15 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { DishRattingService } from './dish-ratting.service';
 import CreateDishRattingDto from './dto/create-dish-ratting.dto';
 import { UpdateDishRattingDto } from './dto/update-dish-ratting.dto';
+import { PaginationDto } from 'src/common/dto/paginationParams.dto';
+import { AuthGuard } from 'src/auth-guard/auth-guard.guard';
 
+@UseGuards(AuthGuard)
 @Controller('dish-ratting')
 export class DishRattingController {
   constructor(private readonly dishRattingService: DishRattingService) {}
@@ -20,9 +23,9 @@ export class DishRattingController {
     return this.dishRattingService.create(createDishRattingDto);
   }
 
-  @Get()
-  findAll() {
-    return this.dishRattingService.findAll();
+  @Post('/:id')
+  finByMenuId(@Param('id') id: string, @Body() pagination: PaginationDto) {
+    return this.dishRattingService.findAllByDish(parseInt(id), pagination);
   }
 
   @Get(':id')
@@ -36,10 +39,5 @@ export class DishRattingController {
     @Body() updateDishRattingDto: UpdateDishRattingDto,
   ) {
     return this.dishRattingService.update(+id, updateDishRattingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.dishRattingService.remove(+id);
   }
 }

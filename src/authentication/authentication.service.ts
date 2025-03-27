@@ -96,7 +96,7 @@ export class AuthenticationService {
       }
       const jwtSecret = process.env.JWT_SECRET || 'default_secret_value';
       const token = jwt.sign(
-        { id: usuario.id, role: loginDto.role },
+        { id: usuario.id, role: usuario.role },
         jwtSecret,
         { expiresIn: '12h' },
       );

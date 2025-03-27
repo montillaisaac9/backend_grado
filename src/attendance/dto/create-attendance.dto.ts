@@ -8,4 +8,8 @@ export class CreateAttendanceDto {
   @IsInt()
   @IsNotEmpty()
   menuId: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  dishId: number;
 }

@@ -1,5 +1,13 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsInt, IsNumber, Max, Min } from 'class-validator';
+import {
+  IsDate,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export default class DishRatingDto {
   @IsInt()
@@ -22,4 +30,19 @@ export default class DishRatingDto {
   @IsDate()
   @Type(() => Date)
   createdAt: Date;
+
+  @Type(() => UserDto)
+  @IsOptional()
+  user?: UserDto;
+}
+
+export class UserDto {
+  @IsInt()
+  id: number;
+
+  @IsString()
+  name: string;
+
+  @IsString()
+  email: string;
 }

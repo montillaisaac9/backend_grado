@@ -81,10 +81,11 @@ model Dish {
   fridayMenus     Menu[]    @relation("friday", fields: [], references: [])
 
   // Relación con las estadísticas (por cada plato)
-  stats           Stats[]   @relation("DishStats")
-
+  attendances Attendance[]
   // Relación con las puntuaciones de los platos
   dishRatings     DishRating[]
+
+  Stats Stats[]
 }
 model Menu {
   id        Int      @id @default(autoincrement())
@@ -117,12 +118,15 @@ model Attendance {
   id          Int       @id @default(autoincrement())
   userId      Int
   menuId      Int
+  dishId Int  // Nuevo campo para saber qué plato comió el usuario
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   menu        Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  dish        Dish      @relation(fields: [dishId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
-  
-  @@unique([userId, menuId]) // Un usuario solo puede registrar asistencia una vez por menú
+
+  @@unique([userId, menuId, dishId]) // Un usuario solo puede registrar asistencia una vez por menú y plato
 }
+
 
 model Comment {
   id          Int       @id @default(autoincrement())
@@ -153,6 +157,9 @@ model DishRating {
 model Stats {
   id              Int       @id @default(autoincrement())
   date            DateTime  @unique // Fecha de las estadísticas
+  dayOfWeek       String  // 'Monday', 'Tuesday', etc.
+  totalDish Int
+  dishId Int
   totalAttendance Int       // Total de asistencias
   budgetUsed      Float     // Presupuesto utilizado
   wastagePercent  Float?    // Porcentaje de desperdicio
@@ -160,7 +167,7 @@ model Stats {
   createdAt       DateTime  @default(now())
 
   // Relación con Dish (Platos)
-  dishes          Dish[]    @relation("DishStats")
+  dish       Dish    @relation(fields: [dishId], references: [id], onDelete: Cascade)
   
   // Relación con DishRating
   dishRatings     DishRating[]

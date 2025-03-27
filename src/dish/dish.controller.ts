@@ -8,13 +8,16 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 import { DishService } from './dish.service';
 import CreateDishDto from './dto/create-dish.dto';
 import { UpdateDishDto } from './dto/update-dish.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaginationDto } from 'src/common/dto/paginationParams.dto';
+import { AuthGuard } from 'src/auth-guard/auth-guard.guard';
 
+@UseGuards(AuthGuard)
 @Controller('dish')
 export class DishController {
   constructor(private readonly dishService: DishService) {}

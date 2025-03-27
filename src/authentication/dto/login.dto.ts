@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, Matches, IsNotEmpty, IsEnum } from 'class-validator';
+import { IsString, Matches, IsNotEmpty } from 'class-validator';
 
 export default class LoginDto {
   @ApiProperty({ example: 'user@example.com', description: 'User email' })
@@ -14,13 +14,4 @@ export default class LoginDto {
   @IsString({ message: 'La contraseña debe ser una cadena de texto' })
   @IsNotEmpty({ message: 'La contraseña no puede estar vacía' })
   password: string;
-
-  @ApiProperty({
-    example: 'admin',
-    description: 'User role, either admin or student',
-  })
-  @IsEnum(['empleado', 'estudiante'], {
-    message: 'El rol debe ser admin o estudiante',
-  })
-  role: 'empleado' | 'estudiante';
 }
