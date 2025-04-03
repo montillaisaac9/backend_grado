@@ -11,6 +11,7 @@ import { MenuModule } from './menu/menu.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { CommentModule } from './comment/comment.module';
 import { DishRattingModule } from './dish-ratting/dish-ratting.module';
+import { CariersModule } from './cariers/cariers.module';
 
 @Module({
   controllers: [AppController],
@@ -28,6 +29,7 @@ import { DishRattingModule } from './dish-ratting/dish-ratting.module';
     AttendanceModule,
     CommentModule,
     DishRattingModule,
+    CariersModule,
   ],
 })
 export class AppModule {}
