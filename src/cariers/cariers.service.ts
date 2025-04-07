@@ -49,6 +49,32 @@ export class CariersService {
     }
   }
 
+  async findActive(): Promise<IResponse<Array<CareerDto>>> {
+    try {
+      const careers = await this.prisma.career.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+        }
+      });
+  
+      const careersArray: Array<CareerDto> = careers.map((career) => ({
+        id: career.id,
+        name: career.name,
+      }));
+  
+      return {
+        success: true,
+        data: careersArray,
+        error: null,
+      };
+    } catch (error: unknown) {
+      return handleErrors<CareerDto[]>(error);
+    }
+  }
+  
+
   async findOne(id: number): Promise<IResponse<CareerDto>> {
     try {
       const career = await this.prisma.career.findUnique({

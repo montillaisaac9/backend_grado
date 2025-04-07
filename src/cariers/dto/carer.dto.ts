@@ -11,11 +11,12 @@ export class CareerDto {
   description?: string;
 
   @Expose()
-  createdAt: Date;
+  createdAt?: Date;
 
   @Expose()
-  updatedAt: Date;
+  updatedAt?: Date;
 
   @Expose()
-  isActive: boolean;
+  isActive?: boolean;
 }
+

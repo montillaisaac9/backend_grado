@@ -11,7 +11,7 @@ import { CariersService } from './cariers.service';
 import { CreateCareerDto } from './dto/create-carier.dto';
 import { UpdateCarierDto } from './dto/update-carier.dto';
 
-@Controller('cariers')
+@Controller('carriers')
 export class CariersController {
   constructor(private readonly cariersService: CariersService) {}
 
@@ -23,6 +23,11 @@ export class CariersController {
   @Get()
   findAll() {
     return this.cariersService.findAll();
+  }
+
+  @Get('/active')
+  findActive() {
+    return this.cariersService.findActive();
   }
 
   @Get(':id')
