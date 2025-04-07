@@ -18,6 +18,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UserDto } from './dto/UserDto.dto';
 import CreateUserDto from './dto/createUserDto.dto';
 import { UpdateUserDto } from './dto/UpdateUserDto';
+import { Logger } from '@nestjs/common';
 
 @ApiTags('Authentication')
 @Controller('authentication')
@@ -30,12 +31,18 @@ export class AuthenticationController {
     description: 'User registered successfully',
     type: UserDto,
   })
-  @Post('/register/student')
+  @Post('/register')
   @UseInterceptors(FileInterceptor('image'))
   createStudent(
     @Body() createAuthenticationDto: CreateUserDto,
     @UploadedFile() image: Express.Multer.File | undefined,
   ) {
+    // Convertir el DTO a JSON y loguearlo
+    Logger.log('Received DTO:', JSON.stringify(createAuthenticationDto));
+    
+    // Log de la imagen (si existe)
+    Logger.log('Received image:', image ? image.path : 'No image provided');
+    
     return this.authenticationService.createUser(
       createAuthenticationDto,
       image ? image.path : undefined,
