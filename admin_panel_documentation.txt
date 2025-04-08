@@ -1,0 +1,377 @@
+# Documentación de API para Panel Administrativo
+
+## 1. Módulo de Autenticación (Authentication)
+- Base URL: /authentication
+
+### 1.1 Registro de Usuario
+- Endpoint: POST /register
+- Parámetros:
+  {
+    email: string;          // Email válido
+    identification: string; // Número de identificación
+    name: string;          // Nombre completo
+    password: string;      // Mínimo 6 caracteres
+    securityWord: string;  // Palabra de seguridad
+    role: Role;           // ADMIN, EMPLOYEE o STUDENT
+    position?: string;    // Opcional - Cargo del empleado
+    photo?: string;       // Opcional - URL de la foto
+    isActive?: boolean;   // Opcional - Estado del usuario
+    careerIds: number[];  // IDs de las carreras
+  }
+- Respuesta:
+  {
+    success: boolean;
+    data: string; // Mensaje de éxito
+    error: {
+      statusCode: number;
+      path: string;
+      message: string;
+      timestamp: string;
+    } | null;
+  }
+
+### 1.2 Inicio de Sesión
+- Endpoint: POST /login
+- Parámetros:
+  {
+    email: string;    // Email del usuario
+    password: string; // Contraseña
+  }
+- Respuesta:
+  {
+    success: boolean;
+    data: {
+      id: number;
+      email: string;
+      name: string;
+      identification: string;
+      role: Role;
+      securityWord: string;
+      position?: string;
+      isActive: boolean;
+      photo: string | null;
+      careers: {
+        id: number;
+        name: string;
+      }[];
+    };
+    error: null;
+  }
+
+### 1.3 Cerrar Sesión
+- Endpoint: POST /logout
+- Respuesta:
+  {
+    success: boolean;
+    data: null;
+    error: null;
+  }
+
+### 1.4 Cambiar Contraseña
+- Endpoint: POST /changePassword
+- Parámetros:
+  {
+    email: string;        // Email del usuario
+    securityWord: string; // Palabra de seguridad
+    newPassword: string;  // Nueva contraseña
+  }
+- Respuesta:
+  {
+    success: boolean;
+    data: string; // Mensaje de éxito
+    error: null;
+  }
+
+### 1.5 Obtener Perfil
+- Endpoint: GET /perfil/:id
+- Parámetros:
+  - id: number (en la URL)
+- Respuesta:
+  {
+    success: boolean;
+    data: UserDto;
+    error: null;
+  }
+
+### 1.6 Editar Perfil
+- Endpoint: PATCH /edit/:id
+- Parámetros:
+  - id: number (en la URL)
+  - Body: UpdateUserDto (mismos campos que CreateUserDto pero todos opcionales)
+- Respuesta:
+  {
+    success: boolean;
+    data: UserDto;
+    error: null;
+  }
+
+## 2. Módulo de Carreras (Carriers)
+- Base URL: /carriers
+
+### 2.1 Crear Carrera
+- Endpoint: POST /
+- Parámetros:
+  {
+    name: string;
+    description?: string;
+    isActive?: boolean;
+  }
+- Respuesta:
+  {
+    success: boolean;
+    data: CareerDto;
+    error: null;
+  }
+
+### 2.2 Obtener Todas las Carreras
+- Endpoint: GET /
+- Respuesta:
+  {
+    success: boolean;
+    data: CareerDto[];
+    error: null;
+  }
+
+### 2.3 Obtener Carrera Específica
+- Endpoint: GET /:id
+- Parámetros:
+  - id: number (en la URL)
+- Respuesta:
+  {
+    success: boolean;
+    data: CareerDto;
+    error: null;
+  }
+
+### 2.4 Actualizar Carrera
+- Endpoint: PATCH /:id
+- Parámetros:
+  - id: number (en la URL)
+  - Body: UpdateCarierDto (mismos campos que CreateCareerDto pero todos opcionales)
+- Respuesta:
+  {
+    success: boolean;
+    data: CareerDto;
+    error: null;
+  }
+
+### 2.5 Eliminar Carrera
+- Endpoint: DELETE /:id
+- Parámetros:
+  - id: number (en la URL)
+- Respuesta:
+  {
+    success: boolean;
+    data: string; // Mensaje de éxito
+    error: null;
+  }
+
+## 3. Módulo de Platos (Dish)
+- Base URL: /dish
+
+### 3.1 Crear Plato
+- Endpoint: POST /
+- Parámetros:
+  {
+    title: string;
+    description: string;
+    photo?: string;
+    cost: number;
+    calories: number;
+    proteins: number;
+    fats: number;
+    carbohydrates: number;
+    isActive?: boolean;
+  }
+- Respuesta:
+  {
+    success: boolean;
+    data: DishDto;
+    error: null;
+  }
+
+### 3.2 Obtener Todos los Platos
+- Endpoint: POST /all
+- Parámetros:
+  {
+    offset?: number; // Default: 0
+    limit?: number;  // Default: 10
+  }
+- Respuesta:
+  {
+    success: boolean;
+    data: {
+      offset: number;
+      limit: number;
+      arrayList: DishDto[];
+      total: number;
+    };
+    error: null;
+  }
+
+### 3.3 Obtener Plato Específico
+- Endpoint: GET /:id
+- Parámetros:
+  - id: number (en la URL)
+- Respuesta:
+  {
+    success: boolean;
+    data: DishDto;
+    error: null;
+  }
+
+### 3.4 Actualizar Plato
+- Endpoint: PATCH /:id
+- Parámetros:
+  - id: number (en la URL)
+  - Body: UpdateDishDto (mismos campos que CreateDishDto pero todos opcionales)
+- Respuesta:
+  {
+    success: boolean;
+    data: DishDto;
+    error: null;
+  }
+
+## 4. Módulo de Comentarios (Comment)
+- Base URL: /comment
+
+### 4.1 Obtener Comentarios por Plato
+- Endpoint: POST /dish/:id
+- Parámetros:
+  - id: number (en la URL)
+  - Body: PaginationDto
+- Respuesta:
+  {
+    success: boolean;
+    data: {
+      offset: number;
+      limit: number;
+      arrayList: CommentDto[];
+      total: number;
+    };
+    error: null;
+  }
+
+### 4.2 Obtener Comentario Específico
+- Endpoint: GET /:id
+- Parámetros:
+  - id: number (en la URL)
+- Respuesta:
+  {
+    success: boolean;
+    data: CommentDto;
+    error: null;
+  }
+
+## 5. Módulo de Calificaciones (Dish Rating)
+- Base URL: /dish-ratting
+
+### 5.1 Obtener Calificaciones por Plato
+- Endpoint: POST /:id
+- Parámetros:
+  - id: number (en la URL)
+  - Body: PaginationDto
+- Respuesta:
+  {
+    success: boolean;
+    data: {
+      offset: number;
+      limit: number;
+      arrayList: DishRatingDto[];
+      total: number;
+    };
+    error: null;
+  }
+
+### 5.2 Obtener Calificación Específica
+- Endpoint: GET /:id
+- Parámetros:
+  - id: number (en la URL)
+- Respuesta:
+  {
+    success: boolean;
+    data: DishRatingDto;
+    error: null;
+  }
+
+## 6. Módulo de Menú (Menu)
+- Base URL: /menu
+
+### 6.1 Crear Menú
+- Endpoint: POST /
+- Parámetros:
+  {
+    title: string;
+    description: string;
+    date: Date;
+    isActive?: boolean;
+  }
+- Respuesta:
+  {
+    success: boolean;
+    data: MenuDto;
+    error: null;
+  }
+
+### 6.2 Obtener Todos los Menús
+- Endpoint: POST /all
+- Parámetros:
+  {
+    offset?: number; // Default: 0
+    limit?: number;  // Default: 10
+  }
+- Respuesta:
+  {
+    success: boolean;
+    data: {
+      offset: number;
+      limit: number;
+      arrayList: MenuDto[];
+      total: number;
+    };
+    error: null;
+  }
+
+### 6.3 Obtener Menú Específico
+- Endpoint: GET /:id
+- Parámetros:
+  - id: number (en la URL)
+- Respuesta:
+  {
+    success: boolean;
+    data: MenuDto;
+    error: null;
+  }
+
+## Notas Adicionales:
+
+1. Tipos de Datos:
+   - Role: enum con valores ADMIN, EMPLOYEE, STUDENT
+   - PaginationDto: usado para paginación en varios endpoints
+   - Todos los DTOs tienen validaciones implementadas
+
+2. Manejo de Errores:
+   - Todos los endpoints retornan el mismo formato de error:
+   {
+     success: false;
+     data: null;
+     error: {
+       statusCode: number;
+       path: string;
+       message: string;
+       timestamp: string;
+     }
+   }
+
+3. Autenticación:
+   - Los endpoints protegidos requieren el token JWT en la cookie auth_token
+   - El token debe tener el rol correcto (ADMIN o EMPLOYEE)
+
+4. Paginación:
+   - Los endpoints que soportan paginación usan:
+   {
+     offset?: number; // Default: 0
+     limit?: number;  // Default: 10
+   } 
+
+   

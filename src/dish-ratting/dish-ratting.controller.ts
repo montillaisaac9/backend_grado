@@ -12,6 +12,10 @@ import CreateDishRattingDto from './dto/create-dish-ratting.dto';
 import { UpdateDishRattingDto } from './dto/update-dish-ratting.dto';
 import { PaginationDto } from 'src/common/dto/paginationParams.dto';
 import { AuthGuard } from 'src/auth-guard/auth-guard.guard';
+import { RolesGuard } from 'src/roles/roles.guard';
+import { Roles } from 'src/roles/roles.decorator';
+import { Role } from '@prisma/client';
+
 
 @UseGuards(AuthGuard)
 @Controller('dish-ratting')
@@ -23,11 +27,17 @@ export class DishRattingController {
     return this.dishRattingService.create(createDishRattingDto);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Roles(Role.EMPLOYEE)
   @Post('/:id')
   finByMenuId(@Param('id') id: string, @Body() pagination: PaginationDto) {
     return this.dishRattingService.findAllByDish(parseInt(id), pagination);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Roles(Role.EMPLOYEE)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.dishRattingService.findOne(+id);
