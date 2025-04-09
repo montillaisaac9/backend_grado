@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { CariersService } from './cariers.service';
 import { CreateCareerDto } from './dto/create-carier.dto';

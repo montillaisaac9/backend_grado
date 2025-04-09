@@ -4,7 +4,7 @@
 - Base URL: /authentication
 
 ### 1.1 Registro de Usuario
-- Endpoint: POST /register
+- Endpoint: POST  authentication/register
 - Parámetros:
   {
     email: string;          // Email válido
@@ -31,7 +31,7 @@
   }
 
 ### 1.2 Inicio de Sesión
-- Endpoint: POST /login
+- Endpoint: POST authentication/login
 - Parámetros:
   {
     email: string;    // Email del usuario
@@ -128,7 +128,20 @@
 - Respuesta:
   {
     success: boolean;
-    data: CareerDto[];
+    data: ;
+    error: null;
+  }
+
+- Endpoint: GET carriers/active
+- Respuesta:
+  {
+    success: boolean;
+    data: [
+        {
+            "id": 1,
+            "name": "Agronomía mención Producción Animal"
+        },
+    ];
     error: null;
   }
 
