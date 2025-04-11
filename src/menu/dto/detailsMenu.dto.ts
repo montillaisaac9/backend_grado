@@ -6,7 +6,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import DishDto from 'src/dish/dto/dish.dto';
+import { DishDto } from 'src/dish/dto/dish.dto';
 
 export class MenuDetailsDto {
   @ApiProperty({ example: 1 })

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import CreateDishDto from './dto/create-dish.dto';
 import { UpdateDishDto } from './dto/update-dish.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import DishDto from './dto/dish.dto';
+import { DishDto, DishSelectDto } from './dto/dish.dto';
 import { IResponse } from 'src/common/interfaces/response.interface';
 import { handleErrors } from 'src/common/utils/error-handler';
 import { PaginationDto } from 'src/common/dto/paginationParams.dto';
@@ -113,6 +113,28 @@ export class DishService {
     }
   }
 
+  async findActive(): Promise<IResponse<Array<DishSelectDto>>> {
+    try {
+      const dishes = await this.prisma.dish.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          title: true,
+        },
+      });
+      const dishesArray: Array<DishSelectDto> = dishes.map((dish) => ({
+        id: dish.id,
+        title: dish.title,
+      }));
+      return {
+        success: true,
+        data: dishesArray,
+        error: null,
+      };
+    } catch (error: unknown) {
+      return handleErrors<DishSelectDto[]>(error);
+    }
+  }
   async findOne(id: number): Promise<IResponse<DishDto>> {
     try {
       const dish = await this.prisma.dish.findUnique({

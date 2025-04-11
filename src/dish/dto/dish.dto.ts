@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class DishDto {
+export class DishDto {
   @ApiProperty({ example: 1 })
   id: number;
 
@@ -41,4 +41,13 @@ export default class DishDto {
 
   @ApiProperty({ example: 45.0, description: 'Carbohidratos en gramos' })
   carbohydrates: number;
+}
+
+
+export class DishSelectDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'Ensalada César' })
+  title: string;
 }

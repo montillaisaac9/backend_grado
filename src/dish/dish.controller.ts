@@ -52,6 +52,14 @@ export class DishController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @Roles(Role.EMPLOYEE)
+  @Get('/active')
+  findActive() {
+    return this.dishService.findActive();
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Roles(Role.EMPLOYEE)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.dishService.findOne(+id);
