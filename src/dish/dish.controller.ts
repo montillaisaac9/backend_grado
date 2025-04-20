@@ -20,7 +20,6 @@ import { RolesGuard } from 'src/roles/roles.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { Role } from '@prisma/client';
 
-
 @UseGuards(AuthGuard)
 @Controller('dish')
 export class DishController {
@@ -68,9 +67,18 @@ export class DishController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @Roles(Role.EMPLOYEE)
+  @UseInterceptors(FileInterceptor('image'))
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDishDto: UpdateDishDto) {
-    return this.dishService.update(+id, updateDishDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateDishDto: UpdateDishDto,
+    @UploadedFile() image: Express.Multer.File | undefined,
+  ) {
+    return this.dishService.update(
+      +id,
+      image ? image.path : undefined,
+      updateDishDto,
+    );
   }
 
   @UseGuards(RolesGuard)

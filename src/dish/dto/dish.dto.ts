@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 export class DishDto {
   @ApiProperty({ example: 1 })
@@ -41,6 +42,7 @@ export class DishDto {
 
   @ApiProperty({ example: 45.0, description: 'Carbohidratos en gramos' })
   carbohydrates: number;
+
 }
 
 

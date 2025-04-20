@@ -55,5 +55,5 @@ export default class CreateDishDto {
 
   @IsOptional()
   @IsString()
-  isActive?: boolean = true;
+  isActive?: boolean;
 }

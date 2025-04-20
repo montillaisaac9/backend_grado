@@ -182,6 +182,7 @@ export class DishService {
 
   async update(
     id: number,
+    url: string | undefined = undefined,
     updateDishDto: UpdateDishDto,
   ): Promise<IResponse<DishDto>> {
     try {
@@ -207,7 +208,14 @@ export class DishService {
         data: {
           title: updateDishDto.title,
           description: updateDishDto.description,
-          photo: updateDishDto.photo,
+          photo: url ? `http://localhost:3000/${url}` : undefined,
+          cost: parseFloat((updateDishDto.cost ?? 0.0).toString()),
+          calories: parseInt((updateDishDto.calories ?? 0).toString()),
+          carbohydrates: parseFloat(
+            (updateDishDto.carbohydrates ?? 0).toString(),
+          ),
+          proteins: parseFloat((updateDishDto.proteins ?? 0).toString()),
+          fats: parseFloat((updateDishDto.fats ?? 0).toString()),
         },
       });
 
@@ -233,7 +241,7 @@ export class DishService {
     }
   }
 
-  async remove(id: number): Promise<IResponse<null>> {
+  async remove(id: number): Promise<IResponse<String>> {
     try {
       // Verificar si el plato existe
       const existingDish = await this.prisma.dish.findUnique({ where: { id } });
@@ -257,7 +265,7 @@ export class DishService {
       // Retornar una respuesta exitosa
       return {
         success: true,
-        data: null,
+        data: 'El plato fue eliminado correctamente',
         error: null,
       };
     } catch (error: unknown) {
