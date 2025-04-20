@@ -38,13 +38,13 @@ export class MenuController {
     return this.menuService.getAllMenu(pagination);
   }
 
-  @UseGuards(RolesGuard)
+/*   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @Roles(Role.EMPLOYEE)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.menuService.findOne(parseInt(id));
-  }
+  } */
 
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
@@ -62,7 +62,7 @@ export class MenuController {
     return this.menuService.remove(+id);
   }
 
-  @Post('/week')
+  @Get('/week')
   weekMenu() {
     return this.menuService.findWeekMenu();
   }
