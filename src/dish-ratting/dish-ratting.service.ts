@@ -72,7 +72,6 @@ export class DishRattingService {
         rating: com.rating,
         userId: com.userId,
         dishId: com.dishId,
-        statsId: com.statsId,
         createdAt: com.createdAt,
         user: {
           id: com.user.id,
@@ -132,7 +131,6 @@ export class DishRattingService {
         rating: dishRatingEntity.rating,
         userId: dishRatingEntity.userId,
         dishId: dishRatingEntity.dishId,
-        statsId: dishRatingEntity.statsId,
         createdAt: dishRatingEntity.createdAt,
         user: {
           id: dishRatingEntity.user.id,
@@ -191,7 +189,6 @@ export class DishRattingService {
           rating: updatedDish.rating,
           userId: updatedDish.userId,
           dishId: updatedDish.dishId,
-          statsId: updatedDish.statsId,
           createdAt: updatedDish.createdAt,
         },
         error: null,

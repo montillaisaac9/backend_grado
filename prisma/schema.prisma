@@ -142,35 +142,24 @@ model DishRating {
   id         Int     @id @default(autoincrement())
   userId     Int     // ID del usuario que calificó el plato
   dishId     Int     // ID del plato calificado
-  statsId    Int     // ID de las estadísticas del día
   rating     Float   // Puntuación del plato, un valor entre 1 y 5
   createdAt  DateTime @default(now()) // Fecha en que se realizó la puntuación
 
   // Relaciones
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   dish       Dish    @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  stats      Stats  @relation(fields: [statsId], references: [id], onDelete: Cascade)
-  @@unique([userId, dishId, statsId]) // Un usuario solo puede calificar un plato una vez
+  @@unique([userId, dishId]) // Un usuario solo puede calificar un plato una vez
 }
 
 
 model Stats {
   id              Int       @id @default(autoincrement())
-  date            DateTime  @unique // Fecha de las estadísticas
-  dayOfWeek       String  // 'Monday', 'Tuesday', etc.
+  date            DateTime  @unique
   totalDish Int
   dishId Int
-  totalAttendance Int       // Total de asistencias
-  budgetUsed      Float     // Presupuesto utilizado
-  wastagePercent  Float?    // Porcentaje de desperdicio
-  avgDishRating   Float?    // Puntuación promedio de los platos
+  totalAttendance Int      
   createdAt       DateTime  @default(now())
-
-  // Relación con Dish (Platos)
   dish       Dish    @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  
-  // Relación con DishRating
-  dishRatings     DishRating[]
 }
 
 // Notificaciones para usuarios

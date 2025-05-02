@@ -16,7 +16,6 @@ import { RolesGuard } from 'src/roles/roles.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { Role } from '@prisma/client';
 
-
 @Controller('carriers')
 export class CariersController {
   constructor(private readonly cariersService: CariersService) {}

@@ -7,9 +7,6 @@ export default class CreateDishRatingDto {
   @IsInt()
   dishId: number;
 
-  @IsInt()
-  statsId: number;
-
   @IsNumber()
   @Min(1)
   @Max(5)

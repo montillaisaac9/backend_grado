@@ -6,15 +6,15 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import { Logger } from '@nestjs/common'
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   app.enableCors({
     origin: 'http://localhost:3001',
     credentials: true,
-  })
+  });
 
   const config = new DocumentBuilder()
     .setTitle('API del Sistema de Comedor')
@@ -25,7 +25,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
   app.useGlobalPipes(new ValidationPipe());
-  app.useLogger(new Logger())
+  app.useLogger(new Logger());
   app.useGlobalFilters(
     new HttpExceptionFilter(),
     new DatabaseExceptionFilter(),
@@ -34,4 +34,4 @@ async function bootstrap() {
   app.use(cookieParser());
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();
