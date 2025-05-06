@@ -1,0 +1,73 @@
+// Definición del enum para los días de la semana
+enum WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+}
+
+model Dish {
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String
+  photo           String?
+  cost            Float     // Costo del platillo
+  calories        Int       // Calorías en kcal
+  proteins        Float     // Proteínas en gramos
+  fats            Float     // Grasas en gramos
+  carbohydrates   Float     // Carbohidratos en gramos
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relación con las encuestas de satisfacción
+  comments        Comment[]
+
+  // Relación con los menús donde aparece este plato
+  menuItems       MenuItem[]
+  
+  // Relación con las estadísticas (por cada plato)
+  attendances     Attendance[]
+  
+  // Relación con las puntuaciones de los platos
+  dishRatings     DishRating[]
+
+  Stats           Stats[]
+}
+
+model Menu {
+  id         Int       @id @default(autoincrement())
+  weekStart  DateTime  // Fecha de inicio de la semana
+  weekEnd    DateTime  // Fecha de finalización de la semana
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relación con los platos para cada día
+  menuItems  MenuItem[]
+  
+  // Relación con asistencias
+  attendances Attendance[]
+}
+
+// Modelo intermedio para relacionar menús con platos por día
+model MenuItem {
+  id        Int      @id @default(autoincrement())
+  date      DateTime // Fecha específica del día
+  weekDay   WeekDay  // Día de la semana como enum
+  
+  // Relación con el menú
+  menu      Menu     @relation(fields: [menuId], references: [id])
+  menuId    Int
+  
+  // Relación con el plato
+  dish      Dish     @relation(fields: [dishId], references: [id])
+  dishId    Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([menuId, date])  // Un menú solo puede tener un plato por fecha
+  @@index([weekDay])        // Indexar por día de la semana para consultas rápidas
+}

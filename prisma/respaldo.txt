@@ -13,14 +13,6 @@ enum Role {
   EMPLOYEE
 }
 
-enum WeekDay {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
-}
-
 model User {
   id             Int             @id @default(autoincrement())
   email          String          @unique
@@ -64,21 +56,6 @@ model UserCareer {
   @@id([userId, careerId]) // Clave primaria compuesta
 }
 
-
-model Attendance {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  menuId      Int
-  dishId Int  // Nuevo campo para saber qué plato comió el usuario
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  menu        Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  dish        Dish      @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-
-  @@unique([userId, menuId, dishId]) // Un usuario solo puede registrar asistencia una vez por menú y plato
-}
-
-
 model Dish {
   id              Int       @id @default(autoincrement())
   title           String
@@ -97,51 +74,57 @@ model Dish {
   comments        Comment[]
 
   // Relación con los menús donde aparece este plato
-  menuItems       MenuItem[]
-  
+  mondayMenus     Menu[]    @relation("monday", fields: [], references: [])
+  tuesdayMenus    Menu[]    @relation("tuesday", fields: [], references: [])
+  wednesdayMenus  Menu[]    @relation("wednesday", fields: [], references: [])
+  thursdayMenus   Menu[]    @relation("thursday", fields: [], references: [])
+  fridayMenus     Menu[]    @relation("friday", fields: [], references: [])
+
   // Relación con las estadísticas (por cada plato)
-  attendances     Attendance[]
-  
+  attendances Attendance[]
   // Relación con las puntuaciones de los platos
   dishRatings     DishRating[]
 
-  Stats           Stats[]
+  Stats Stats[]
 }
-
 model Menu {
-  id         Int       @id @default(autoincrement())
-  weekStart  DateTime  // Fecha de inicio de la semana
-  weekEnd    DateTime  // Fecha de finalización de la semana
-  isActive   Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  weekStart DateTime // Fecha de inicio de la semana
+  weekEnd   DateTime // Fecha de finalización de la semana
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relación con los platos para cada día
-  menuItems  MenuItem[]
-  
-  // Relación con asistencias
+  // Platos para cada día de la semana
+  monday    Dish  @relation("monday", fields: [mondayId], references: [id])
+  mondayId  Int
+
+  tuesday   Dish  @relation("tuesday", fields: [tuesdayId], references: [id])
+  tuesdayId Int
+
+  wednesday Dish  @relation("wednesday", fields: [wednesdayId], references: [id])
+  wednesdayId Int
+
+  thursday  Dish  @relation("thursday", fields: [thursdayId], references: [id])
+  thursdayId Int
+
+  friday    Dish  @relation("friday", fields: [fridayId], references: [id])
+  fridayId  Int
+
   attendances Attendance[]
 }
 
-// Modelo intermedio para relacionar menús con platos por día
-model MenuItem {
-  id        Int      @id @default(autoincrement())
-  date      DateTime // Fecha específica del día
-  weekDay   WeekDay  // Día de la semana como enum
-  
-  // Relación con el menú
-  menu      Menu     @relation(fields: [menuId], references: [id])
-  menuId    Int
-  
-  // Relación con el plato
-  dish      Dish     @relation(fields: [dishId], references: [id])
-  dishId    Int
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([menuId, date])  // Un menú solo puede tener un plato por fecha
-  @@index([weekDay])        // Indexar por día de la semana para consultas rápidas
+model Attendance {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  menuId      Int
+  dishId Int  // Nuevo campo para saber qué plato comió el usuario
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menu        Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  dish        Dish      @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, menuId, dishId]) // Un usuario solo puede registrar asistencia una vez por menú y plato
 }
 
 

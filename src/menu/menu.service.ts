@@ -8,7 +8,7 @@ import { PaginationDto } from 'src/common/dto/paginationParams.dto';
 import { IPaginatedResponse } from 'src/common/interfaces/responsePaginate.interface';
 import { MenuDto } from './dto/menudto.dto';
 import { validate } from 'class-validator';
-import { MenuDetailsDto } from './dto/detailsMenu.dto';
+import { MenuDetailsDto, DishInfoDto } from './dto/detailsMenu.dto';
 
 @Injectable()
 export class MenuService {
@@ -16,21 +16,35 @@ export class MenuService {
 
   async create(createMenuDto: CreateMenuDto): Promise<IResponse<string>> {
     try {
-      const newMenu = await this.prisma.menu.create({
-        data: {
-          weekStart: new Date(createMenuDto.weekStart),
-          weekEnd: new Date(createMenuDto.weekEnd),
-          isActive: createMenuDto.isActive,
-          mondayId: createMenuDto.mondayId,
-          tuesdayId: createMenuDto.tuesdayId,
-          wednesdayId: createMenuDto.wednesdayId,
-          thursdayId: createMenuDto.thursdayId,
-          fridayId: createMenuDto.fridayId,
-        },
+      // Crear una transacción para mantener consistencia
+      const newMenu = await this.prisma.$transaction(async (prisma) => {
+        // 1. Crear el menú
+        const menu = await prisma.menu.create({
+          data: {
+            weekStart: new Date(createMenuDto.weekStart),
+            weekEnd: new Date(createMenuDto.weekEnd),
+            isActive: createMenuDto.isActive,
+          },
+        });
+
+        // 2. Crear los elementos del menú (MenuItem) para cada día
+        for (const item of createMenuDto.menuItems) {
+          await prisma.menuItem.create({
+            data: {
+              date: new Date(item.date),
+              weekDay: item.weekDay,
+              menuId: menu.id,
+              dishId: item.dishId,
+            },
+          });
+        }
+
+        return menu;
       });
+
       return {
         success: true,
-        data: `Menu creado correctamente newMenu.id: ${newMenu.id}`,
+        data: `Menu creado correctamente con ID: ${newMenu.id}`,
         error: null,
       };
     } catch (error: unknown) {
@@ -55,10 +69,13 @@ export class MenuService {
       // Obtener el total de registros en la base de datos
       const total = await this.prisma.menu.count();
 
-      // Obtener los platos con paginación
+      // Obtener los menús con paginación, incluyendo los elementos del menú
       const menus = await this.prisma.menu.findMany({
         skip: offset,
         take: limit,
+        include: {
+          menuItems: true,
+        },
       });
 
       // Crear un arreglo de MenuDto para devolver la respuesta
@@ -69,11 +86,14 @@ export class MenuService {
         isActive: menu.isActive,
         createdAt: menu.createdAt.toISOString(),
         updatedAt: menu.updatedAt.toISOString(),
-        mondayId: menu.mondayId,
-        tuesdayId: menu.tuesdayId,
-        wednesdayId: menu.wednesdayId,
-        thursdayId: menu.thursdayId,
-        fridayId: menu.fridayId,
+        menuItems: menu.menuItems.map((item) => ({
+          id: item.id,
+          date: item.date.toISOString(),
+          weekDay: item.weekDay,
+          dishId: item.dishId,
+          createdAt: item.createdAt.toISOString(),
+          updatedAt: item.updatedAt.toISOString(),
+        })),
       }));
 
       // Estructura de respuesta con paginación
@@ -93,20 +113,21 @@ export class MenuService {
       return handleErrors(error);
     }
   }
+
   async findOne(id: number): Promise<IResponse<MenuDetailsDto>> {
     try {
       const menu = await this.prisma.menu.findUnique({
         where: { id },
         include: {
-          monday: true, // Trae todos los campos de la relación 'monday'
-          tuesday: true, // Trae todos los campos de la relación 'tuesday'
-          wednesday: true, // Trae todos los campos de la relación 'wednesday'
-          thursday: true, // Trae todos los campos de la relación 'thursday'
-          friday: true, // Trae todos los campos de la relación 'friday'
+          menuItems: {
+            include: {
+              dish: true,
+            },
+          },
         },
       });
 
-      // Si no se encuentra el plato, devolver un error en formato IErrorResponse
+      // Si no se encuentra el menú, devolver un error
       if (!menu) {
         return {
           success: false,
@@ -114,92 +135,63 @@ export class MenuService {
           error: {
             statusCode: 404,
             path: `/menu/${id}`,
-            message: `El menu con ID ${id} no fue encontrado.`,
+            message: `El menú con ID ${id} no fue encontrado.`,
             timestamp: new Date().toISOString(),
           },
         };
       }
 
-      // Convertir el resultado en un objeto `menuDto`
-      const menuDto: MenuDetailsDto = {
+      // Crear objeto para almacenar los platos por día
+      const dayDishes: Record<string, DishInfoDto> = {};
+
+      // Preparar los elementos del menú con información detallada de los platos
+      const menuItemDetails = menu.menuItems.map((item) => {
+        const dishInfo: DishInfoDto = {
+          id: item.dish.id,
+          title: item.dish.title,
+          description: item.dish.description,
+          photo: item.dish.photo,
+          votesCount: 0, // Esto se podría calcular desde DishRating si es necesario
+          calories: item.dish.calories,
+          cost: item.dish.cost,
+          carbohydrates: item.dish.carbohydrates,
+          proteins: item.dish.proteins,
+          fats: item.dish.fats,
+        };
+
+        // Almacenar el plato por día para fácil acceso
+        dayDishes[item.weekDay.toLowerCase()] = dishInfo;
+
+        return {
+          id: item.id,
+          date: item.date.toISOString(),
+          weekDay: item.weekDay,
+          dish: dishInfo,
+          createdAt: item.createdAt.toISOString(),
+          updatedAt: item.updatedAt.toISOString(),
+        };
+      });
+
+      // Crear el DTO de detalles del menú
+      const menuDetailsDto: MenuDetailsDto = {
         id: menu.id,
         weekStart: menu.weekStart.toISOString(),
         weekEnd: menu.weekEnd.toISOString(),
         isActive: menu.isActive,
         createdAt: menu.createdAt.toISOString(),
         updatedAt: menu.updatedAt.toISOString(),
-        mondayId: menu.mondayId,
-        tuesdayId: menu.tuesdayId,
-        wednesdayId: menu.wednesdayId,
-        thursdayId: menu.thursdayId,
-        fridayId: menu.fridayId,
-        // Propiedades de las relaciones
-        monday: {
-          id: menu.monday.id,
-          title: menu.monday.title,
-          description: menu.monday.description,
-          photo: menu.monday.photo,
-          votesCount: 0,
-          calories: menu.monday.calories,
-          cost: menu.monday.cost,
-          carbohydrates: menu.monday.carbohydrates,
-          proteins: menu.monday.proteins,
-          fats: menu.monday.fats,
-        },
-        tuesday: {
-          id: menu.monday.id,
-          title: menu.monday.title,
-          description: menu.monday.description,
-          photo: menu.monday.photo,
-          votesCount: 0,
-          calories: menu.monday.calories,
-          cost: menu.monday.cost,
-          carbohydrates: menu.monday.carbohydrates,
-          proteins: menu.monday.proteins,
-          fats: menu.monday.fats,
-        },
-        wednesday: {
-          id: menu.monday.id,
-          title: menu.monday.title,
-          description: menu.monday.description,
-          photo: menu.monday.photo,
-          votesCount: 0,
-          calories: menu.monday.calories,
-          cost: menu.monday.cost,
-          carbohydrates: menu.monday.carbohydrates,
-          proteins: menu.monday.proteins,
-          fats: menu.monday.fats,
-        },
-        thursday: {
-          id: menu.monday.id,
-          title: menu.monday.title,
-          description: menu.monday.description,
-          photo: menu.monday.photo,
-          votesCount: 0,
-          calories: menu.monday.calories,
-          cost: menu.monday.cost,
-          carbohydrates: menu.monday.carbohydrates,
-          proteins: menu.monday.proteins,
-          fats: menu.monday.fats,
-        },
-        friday: {
-          id: menu.monday.id,
-          title: menu.monday.title,
-          description: menu.monday.description,
-          photo: menu.monday.photo,
-          votesCount: 0,
-          calories: menu.monday.calories,
-          cost: menu.monday.cost,
-          carbohydrates: menu.monday.carbohydrates,
-          proteins: menu.monday.proteins,
-          fats: menu.monday.fats,
-        },
+        menuItems: menuItemDetails,
+        // Asignar los platos por día para mantener compatibilidad con código existente
+        monday: dayDishes.monday,
+        tuesday: dayDishes.tuesday,
+        wednesday: dayDishes.wednesday,
+        thursday: dayDishes.thursday,
+        friday: dayDishes.friday,
       };
 
-      // Retornar el objeto con la estructura de `IResponse`
       return {
         success: true,
-        data: menuDto,
+        data: menuDetailsDto,
         error: null,
       };
     } catch (error: unknown) {
@@ -209,62 +201,107 @@ export class MenuService {
 
   async update(
     id: number,
-    updatemenuDto: UpdateMenuDto,
+    updateMenuDto: UpdateMenuDto,
   ): Promise<IResponse<MenuDto>> {
     try {
-      // Verificar si el plato existe
-      const existingmenu = await this.prisma.menu.findUnique({ where: { id } });
+      // Verificar si el menú existe
+      const existingMenu = await this.prisma.menu.findUnique({
+        where: { id },
+        include: { menuItems: true },
+      });
 
-      if (!existingmenu) {
+      if (!existingMenu) {
         return {
           success: false,
           data: null,
           error: {
             statusCode: 404,
             path: `/menu/${id}`,
-            message: `El menu con ID ${id} no fue encontrado.`,
+            message: `El menú con ID ${id} no fue encontrado.`,
             timestamp: new Date().toISOString(),
           },
         };
       }
 
-      // Actualizar el plato
-      const updatedmenu = await this.prisma.menu.update({
-        where: { id },
-        data: {
-          isActive: updatemenuDto.isActive,
-          ...(updatemenuDto.weekStart && {
-            weekStart: new Date(updatemenuDto.weekStart),
-          }),
-          ...(updatemenuDto.weekEnd && {
-            weekEnd: new Date(updatemenuDto.weekEnd),
-          }),
-          mondayId: updatemenuDto.mondayId,
-          tuesdayId: updatemenuDto.tuesdayId,
-          wednesdayId: updatemenuDto.wednesdayId,
-          thursdayId: updatemenuDto.thursdayId,
-          fridayId: updatemenuDto.fridayId,
-        },
+      // Actualizar el menú y sus elementos en una transacción
+      const updatedMenu = await this.prisma.$transaction(async (prisma) => {
+        // 1. Actualizar el menú principal
+        const menu = await prisma.menu.update({
+          where: { id },
+          data: {
+            isActive: updateMenuDto.isActive,
+            ...(updateMenuDto.weekStart && {
+              weekStart: new Date(updateMenuDto.weekStart),
+            }),
+            ...(updateMenuDto.weekEnd && {
+              weekEnd: new Date(updateMenuDto.weekEnd),
+            }),
+          },
+          include: { menuItems: true },
+        });
+        console.log(menu);
+
+        // 2. Si hay elementos del menú para actualizar
+        if (updateMenuDto.menuItems && updateMenuDto.menuItems.length > 0) {
+          // Eliminar los elementos existentes
+          await prisma.menuItem.deleteMany({
+            where: { menuId: id },
+          });
+
+          // Crear los nuevos elementos
+          for (const item of updateMenuDto.menuItems) {
+            await prisma.menuItem.create({
+              data: {
+                date: new Date(item.date),
+                weekDay: item.weekDay,
+                menuId: id,
+                dishId: item.dishId,
+              },
+            });
+          }
+        }
+
+        // Obtener el menú actualizado con todos sus elementos
+        return prisma.menu.findUnique({
+          where: { id },
+          include: { menuItems: true },
+        });
       });
 
-      // Retornar la respuesta con `IResponse`
-      return {
-        success: true,
-        data: {
-          id: updatedmenu.id,
-          weekStart: updatedmenu.weekStart.toISOString(),
-          weekEnd: updatedmenu.weekEnd.toISOString(),
-          isActive: updatedmenu.isActive,
-          createdAt: updatedmenu.createdAt.toISOString(),
-          updatedAt: updatedmenu.updatedAt.toISOString(),
-          mondayId: updatedmenu.mondayId,
-          tuesdayId: updatedmenu.tuesdayId,
-          wednesdayId: updatedmenu.wednesdayId,
-          thursdayId: updatedmenu.thursdayId,
-          fridayId: updatedmenu.fridayId,
-        },
-        error: null,
-      };
+      if (updatedMenu != null) {
+        const menuDto: MenuDto = {
+          id: updatedMenu.id,
+          weekStart: updatedMenu.weekStart.toISOString(),
+          weekEnd: updatedMenu.weekEnd.toISOString(),
+          isActive: updatedMenu.isActive,
+          createdAt: updatedMenu.createdAt.toISOString(),
+          updatedAt: updatedMenu.updatedAt.toISOString(),
+          menuItems: updatedMenu.menuItems.map((item) => ({
+            id: item.id,
+            date: item.date.toISOString(),
+            weekDay: item.weekDay,
+            dishId: item.dishId,
+            createdAt: item.createdAt.toISOString(),
+            updatedAt: item.updatedAt.toISOString(),
+          })),
+        };
+        return {
+          success: true,
+          data: menuDto,
+          error: null,
+        };
+      } else {
+        return {
+          success: false,
+          data: null,
+          error: {
+            statusCode: 404,
+            path: `/menu/${id}`,
+            message: `El menú con ID ${id} no fue encontrado.`,
+            timestamp: new Date().toISOString(),
+          },
+        };
+      }
     } catch (error: unknown) {
       return handleErrors(error);
     }
@@ -272,24 +309,30 @@ export class MenuService {
 
   async remove(id: number): Promise<IResponse<null>> {
     try {
-      // Verificar si el plato existe
-      const existingmenu = await this.prisma.menu.findUnique({ where: { id } });
+      // Verificar si el menú existe
+      const existingMenu = await this.prisma.menu.findUnique({ where: { id } });
 
-      if (!existingmenu) {
+      if (!existingMenu) {
         return {
           success: false,
           data: null,
           error: {
             statusCode: 404,
             path: `/menu/${id}`,
-            message: `El menu con ID ${id} no fue encontrado.`,
+            message: `El menú con ID ${id} no fue encontrado.`,
             timestamp: new Date().toISOString(),
           },
         };
       }
 
-      // Eliminar el plato
-      await this.prisma.menu.delete({ where: { id } });
+      // Eliminar en una transacción para mantener integridad
+      await this.prisma.$transaction(async (prisma) => {
+        // 1. Eliminar todos los elementos del menú
+        await prisma.menuItem.deleteMany({ where: { menuId: id } });
+
+        // 2. Eliminar el menú
+        await prisma.menu.delete({ where: { id } });
+      });
 
       // Retornar una respuesta exitosa
       return {
@@ -306,115 +349,89 @@ export class MenuService {
     try {
       const requestedDate = new Date();
 
+      // Buscar el menú para la semana actual
       const menu = await this.prisma.menu.findFirst({
         where: {
           weekStart: { lte: requestedDate },
           weekEnd: { gte: requestedDate },
         },
         include: {
-          monday: true, // Trae todos los campos de la relación 'monday'
-          tuesday: true, // Trae todos los campos de la relación 'tuesday'
-          wednesday: true, // Trae todos los campos de la relación 'wednesday'
-          thursday: true, // Trae todos los campos de la relación 'thursday'
-          friday: true, // Trae todos los campos de la relación 'friday'
+          menuItems: {
+            include: {
+              dish: true,
+            },
+          },
         },
       });
 
-      // Si no se encuentra el plato, devolver un error en formato IErrorResponse
+      // Si no se encuentra el menú, devolver un error
       if (!menu) {
         return {
           success: false,
           data: null,
           error: {
             statusCode: 404,
-            path: `/menues/${requestedDate.toISOString()}`,
-            message: `El menu de esta semana no disponible`,
+            path: `/menus/week/${requestedDate.toISOString()}`,
+            message: `El menú de esta semana no está disponible`,
             timestamp: new Date().toISOString(),
           },
         };
-      } else {
-        const menuDto: MenuDetailsDto = {
-          id: menu.id,
-          weekStart: menu.weekStart.toISOString(),
-          weekEnd: menu.weekEnd.toISOString(),
-          isActive: menu.isActive,
-          createdAt: menu.createdAt.toISOString(),
-          updatedAt: menu.updatedAt.toISOString(),
-          mondayId: menu.mondayId,
-          tuesdayId: menu.tuesdayId,
-          wednesdayId: menu.wednesdayId,
-          thursdayId: menu.thursdayId,
-          fridayId: menu.fridayId,
-          // Propiedades de las relaciones
-          monday: {
-            id: menu.monday.id,
-            title: menu.monday.title,
-            description: menu.monday.description,
-            photo: menu.monday.photo,
-            votesCount: 0,
-            calories: menu.monday.calories,
-            cost: menu.monday.cost,
-            carbohydrates: menu.monday.carbohydrates,
-            proteins: menu.monday.proteins,
-            fats: menu.monday.fats,
-          },
-          tuesday: {
-            id: menu.thursday.id,
-            title: menu.thursday.title,
-            description: menu.thursday.description,
-            photo: menu.thursday.photo,
-            votesCount: 0,
-            calories: menu.thursday.calories,
-            cost: menu.thursday.cost,
-            carbohydrates: menu.thursday.carbohydrates,
-            proteins: menu.thursday.proteins,
-            fats: menu.thursday.fats,
-          },
-          wednesday: {
-            id: menu.wednesday.id,
-            title: menu.wednesday.title,
-            description: menu.wednesday.description,
-            photo: menu.wednesday.photo,
-            votesCount: 0,
-            calories: menu.wednesday.calories,
-            cost: menu.wednesday.cost,
-            carbohydrates: menu.wednesday.carbohydrates,
-            proteins: menu.wednesday.proteins,
-            fats: menu.wednesday.fats,
-          },
-          thursday: {
-            id: menu.thursday.id,
-            title: menu.thursday.title,
-            description: menu.thursday.description,
-            photo: menu.thursday.photo,
-            votesCount: 0,
-            calories: menu.thursday.calories,
-            cost: menu.thursday.cost,
-            carbohydrates: menu.thursday.carbohydrates,
-            proteins: menu.thursday.proteins,
-            fats: menu.thursday.fats,
-          },
-          friday: {
-            id: menu.friday.id,
-            title: menu.friday.title,
-            description: menu.friday.description,
-            photo: menu.friday.photo,
-            votesCount: 0,
-            calories: menu.friday.calories,
-            cost: menu.friday.cost,
-            carbohydrates: menu.friday.carbohydrates,
-            proteins: menu.friday.proteins,
-            fats: menu.friday.fats,
-          },
+      }
+
+      // Crear objeto para almacenar los platos por día
+      const dayDishes: Record<string, DishInfoDto> = {};
+
+      // Preparar los elementos del menú con información detallada de los platos
+      const menuItemDetails = menu.menuItems.map((item) => {
+        const dishInfo: DishInfoDto = {
+          id: item.dish.id,
+          title: item.dish.title,
+          description: item.dish.description,
+          photo: item.dish.photo,
+          votesCount: 0, // Esto se podría calcular desde DishRating si es necesario
+          calories: item.dish.calories,
+          cost: item.dish.cost,
+          carbohydrates: item.dish.carbohydrates,
+          proteins: item.dish.proteins,
+          fats: item.dish.fats,
         };
 
-        // Retornar el objeto con la estructura de `IResponse`
+        // Almacenar el plato por día para fácil acceso (convertir a minúsculas para la clave)
+        const dayKey = item.weekDay.toLowerCase();
+        dayDishes[dayKey] = dishInfo;
+
         return {
-          success: true,
-          data: menuDto,
-          error: null,
+          id: item.id,
+          date: item.date.toISOString(),
+          weekDay: item.weekDay,
+          dish: dishInfo,
+          createdAt: item.createdAt.toISOString(),
+          updatedAt: item.updatedAt.toISOString(),
         };
-      }
+      });
+
+      // Crear el DTO de detalles del menú
+      const menuDetailsDto: MenuDetailsDto = {
+        id: menu.id,
+        weekStart: menu.weekStart.toISOString(),
+        weekEnd: menu.weekEnd.toISOString(),
+        isActive: menu.isActive,
+        createdAt: menu.createdAt.toISOString(),
+        updatedAt: menu.updatedAt.toISOString(),
+        menuItems: menuItemDetails,
+        // Asignar los platos por día para mantener compatibilidad con código existente
+        monday: dayDishes.monday,
+        tuesday: dayDishes.tuesday,
+        wednesday: dayDishes.wednesday,
+        thursday: dayDishes.thursday,
+        friday: dayDishes.friday,
+      };
+
+      return {
+        success: true,
+        data: menuDetailsDto,
+        error: null,
+      };
     } catch (error: unknown) {
       return handleErrors(error);
     }
