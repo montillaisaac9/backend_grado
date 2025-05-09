@@ -8,6 +8,23 @@ export class StatsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create() {
+    const requestedDate = new Date();
+
+    // Buscar el menú para la semana actual
+    const menu = await this.prisma.menu.findFirst({
+      where: {
+        weekStart: { lte: requestedDate },
+        weekEnd: { gte: requestedDate },
+      },
+      include: {
+        menuItems: {
+          include: {
+            dish: true,
+          },
+        },
+      },
+    });
+    console.log(menu)
   }
 
   findAll() {

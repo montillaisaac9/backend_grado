@@ -102,7 +102,7 @@ export class DishRattingService {
     try {
       const dishRatingEntity = await this.prisma.dishRating.findFirst({
         where: {
-          dishId: id, // Assuming `id` is the unique identifier for the dish rating
+          userId: id, // Assuming `id` is the unique identifier for the dish rating
         },
         include: {
           user: {
@@ -190,6 +190,51 @@ export class DishRattingService {
           userId: updatedDish.userId,
           dishId: updatedDish.dishId,
           createdAt: updatedDish.createdAt,
+        },
+        error: null,
+      };
+    } catch (error: unknown) {
+      return handleErrors(error);
+    }
+  }
+
+  async getAverageRating(
+    dishId: number,
+  ): Promise<IResponse<{ totalVotes: number; averageRating: number }>> {
+    try {
+      // Obtener todas las puntuaciones para el plato específico
+      const ratings = await this.prisma.dishRating.findMany({
+        where: {
+          dishId: dishId,
+        },
+        select: {
+          rating: true,
+        },
+      });
+      // Si no hay puntuaciones, devolver un valor predeterminado
+      if (ratings.length === 0) {
+        return {
+          success: true,
+          data: {
+            totalVotes: 0,
+            averageRating: 0,
+          },
+          error: null,
+        };
+      }
+      // Calcular el total de votos
+      const totalVotes = ratings.length;
+      // Calcular la suma de todas las puntuaciones
+      const ratingSum = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+      // Calcular el promedio
+      const averageRating = ratingSum / totalVotes;
+      // Redondear el promedio a 2 decimales
+      const roundedAverage = Math.round(averageRating * 100) / 100;
+      return {
+        success: true,
+        data: {
+          totalVotes,
+          averageRating: roundedAverage,
         },
         error: null,
       };

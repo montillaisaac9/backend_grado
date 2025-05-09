@@ -16,7 +16,6 @@ import { RolesGuard } from 'src/roles/roles.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { Role } from '@prisma/client';
 
-
 @UseGuards(AuthGuard)
 @Controller('dish-ratting')
 export class DishRattingController {
@@ -49,5 +48,13 @@ export class DishRattingController {
     @Body() updateDishRattingDto: UpdateDishRattingDto,
   ) {
     return this.dishRattingService.update(+id, updateDishRattingDto);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Roles(Role.EMPLOYEE)
+  @Get('/dish:id')
+  findByDish(@Param('id') id: string) {
+    return this.dishRattingService.getAverageRating(+id);
   }
 }
