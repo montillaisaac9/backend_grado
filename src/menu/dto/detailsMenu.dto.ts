@@ -1,3 +1,4 @@
+import { Optional } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 
 // DTO para la información básica del plato
@@ -11,11 +12,23 @@ export class DishInfoDto {
   @ApiProperty({ example: 'Pollo en salsa de curry con arroz basmati' })
   description: string;
 
-  @ApiProperty({ example: 'url-de-la-foto.jpg' })
+  @ApiProperty({ example: 'url-de-la-foto.jpg', nullable: true })
   photo: string | null;
 
-  @ApiProperty({ example: 0 })
+  @ApiProperty({
+    example: 15,
+    description: 'Número total de calificaciones recibidas',
+  })
   votesCount: number;
+
+  @ApiProperty({
+    example: 4.2,
+    description: 'Puntuación promedio del plato (1-5 estrellas)',
+    minimum: 0,
+    maximum: 5,
+  })
+  @Optional()
+  averageRating: number;
 
   @ApiProperty({ example: 450 })
   calories: number;
@@ -78,9 +91,18 @@ export class MenuDetailsDto {
   menuItems: MenuItemDetailDto[];
 
   // Helper para acceder fácilmente a los platos por día de semana (opcional)
+  @ApiProperty({ type: DishInfoDto, required: false })
   monday?: DishInfoDto;
+
+  @ApiProperty({ type: DishInfoDto, required: false })
   tuesday?: DishInfoDto;
+
+  @ApiProperty({ type: DishInfoDto, required: false })
   wednesday?: DishInfoDto;
+
+  @ApiProperty({ type: DishInfoDto, required: false })
   thursday?: DishInfoDto;
+
+  @ApiProperty({ type: DishInfoDto, required: false })
   friday?: DishInfoDto;
 }

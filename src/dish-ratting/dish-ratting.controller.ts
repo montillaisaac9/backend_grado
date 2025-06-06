@@ -15,6 +15,7 @@ import { AuthGuard } from 'src/auth-guard/auth-guard.guard';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { Role } from '@prisma/client';
+import DishFind from './dto/find-dish-ratting.dto';
 
 @UseGuards(AuthGuard)
 @Controller('dish-ratting')
@@ -24,6 +25,11 @@ export class DishRattingController {
   @Post()
   create(@Body() createDishRattingDto: CreateDishRattingDto) {
     return this.dishRattingService.create(createDishRattingDto);
+  }
+
+  @Post('/userDish')
+  findByUserIdAndDishId(@Body() findDish: DishFind) {
+    return this.dishRattingService.findByUserIdAndDishId(findDish);
   }
 
   @UseGuards(RolesGuard)

@@ -16,7 +16,7 @@ import { AuthGuard } from 'src/auth-guard/auth-guard.guard';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { Role } from '@prisma/client';
-
+import CommentFind from './dto/find-comment.dto';
 
 @UseGuards(AuthGuard)
 @Controller('comment')
@@ -26,6 +26,11 @@ export class CommentController {
   @Post()
   create(@Body() createCommentDto: CreateCommentDto) {
     return this.commentService.create(createCommentDto);
+  }
+
+  @Post('/userDish')
+  findByUserIdAndDishId(@Body() findDish: CommentFind) {
+    return this.commentService.findByUserIdAndDishId(findDish);
   }
 
   @UseGuards(RolesGuard)

@@ -8,6 +8,7 @@ import { PaginationDto } from 'src/common/dto/paginationParams.dto';
 import { IPaginatedResponse } from 'src/common/interfaces/responsePaginate.interface';
 import DishRatingDto from './dto/dish-rating.dto';
 import { validate } from 'class-validator';
+import DishFind from './dto/find-dish-ratting.dto';
 
 @Injectable()
 export class DishRattingService {
@@ -102,7 +103,7 @@ export class DishRattingService {
     try {
       const dishRatingEntity = await this.prisma.dishRating.findFirst({
         where: {
-          userId: id, // Assuming `id` is the unique identifier for the dish rating
+          userId: id,
         },
         include: {
           user: {
@@ -120,6 +121,61 @@ export class DishRattingService {
             statusCode: 404,
             path: `/dish-rating/${id}`,
             message: `la puntuacion del plato con ID ${id} no fue encontrado.`,
+            timestamp: new Date().toISOString(),
+          },
+        };
+      }
+
+      // Convertir el resultado en un objeto `DishDto`
+      const dishRating: DishRatingDto = {
+        id: dishRatingEntity.id,
+        rating: dishRatingEntity.rating,
+        userId: dishRatingEntity.userId,
+        dishId: dishRatingEntity.dishId,
+        createdAt: dishRatingEntity.createdAt,
+        user: {
+          id: dishRatingEntity.user.id,
+          name: dishRatingEntity.user.name,
+          email: dishRatingEntity.user.email,
+        },
+      };
+
+      // Retornar el objeto con la estructura de `IResponse`
+      return {
+        success: true,
+        data: dishRating,
+        error: null,
+      };
+    } catch (error: unknown) {
+      return handleErrors(error);
+    }
+  }
+
+  async findByUserIdAndDishId(
+    find: DishFind,
+  ): Promise<IResponse<DishRatingDto>> {
+    try {
+      const dishRatingEntity = await this.prisma.dishRating.findFirst({
+        where: {
+          userId: find.userId,
+          dishId: find.dishId,
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      // Si no se encuentra el plato, devolver un error en formato IErrorResponse
+      if (!dishRatingEntity) {
+        return {
+          success: false,
+          data: null,
+          error: {
+            statusCode: 404,
+            path: `/dish-rating/`,
+            message: `la puntuacion del plato con ID ${find.dishId} y el usuario ${find.userId} no fue encontrado.`,
             timestamp: new Date().toISOString(),
           },
         };

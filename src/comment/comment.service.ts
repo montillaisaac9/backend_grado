@@ -8,6 +8,7 @@ import { CommentDto } from './dto/comment.dto';
 import { PaginationDto } from 'src/common/dto/paginationParams.dto';
 import { IPaginatedResponse } from 'src/common/interfaces/responsePaginate.interface';
 import { validate } from 'class-validator';
+import CommentFind from './dto/find-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -118,6 +119,63 @@ export class CommentService {
             statusCode: 404,
             path: `/comment/${id}`,
             message: `El comentario con ID ${id} no fue encontrado.`,
+            timestamp: new Date().toISOString(),
+          },
+        };
+      }
+
+      // Convertir el resultado en un objeto `DishDto`
+      const CommentDto: CommentDto = {
+        id: comment.id,
+        text: comment.text,
+        userId: comment.userId,
+        dishId: comment.dishId,
+        createdAt: comment.createdAt,
+        user: comment.user
+          ? {
+              id: comment.user.id,
+              name: comment.user.name,
+              email: comment.user.email,
+            }
+          : undefined,
+      };
+
+      // Retornar el objeto con la estructura de `IResponse`
+      return {
+        success: true,
+        data: CommentDto,
+        error: null,
+      };
+    } catch (error: unknown) {
+      return handleErrors(error);
+    }
+  }
+
+  async findByUserIdAndDishId(
+    find: CommentFind,
+  ): Promise<IResponse<CommentDto>> {
+    try {
+      const comment = await this.prisma.comment.findFirst({
+        where: {
+          userId: find.userId,
+          dishId: find.dishId,
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      // Si no se encuentra el plato, devolver un error en formato IErrorResponse
+      if (!comment) {
+        return {
+          success: false,
+          data: null,
+          error: {
+            statusCode: 404,
+            path: `/dish-rating/`,
+            message: `el comentario del plato con ID ${find.dishId} y el usuario ${find.userId} no fue encontrado.`,
             timestamp: new Date().toISOString(),
           },
         };

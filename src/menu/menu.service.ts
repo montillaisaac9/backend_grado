@@ -121,7 +121,11 @@ export class MenuService {
         include: {
           menuItems: {
             include: {
-              dish: true,
+              dish: {
+                include: {
+                  dishRatings: true, // Incluir las calificaciones del plato
+                },
+              },
             },
           },
         },
@@ -146,12 +150,21 @@ export class MenuService {
 
       // Preparar los elementos del menú con información detallada de los platos
       const menuItemDetails = menu.menuItems.map((item) => {
+        // Calcular la puntuación promedio del plato
+        const ratings = item.dish.dishRatings;
+        const averageRating =
+          ratings.length > 0
+            ? ratings.reduce((sum, rating) => sum + rating.rating, 0) /
+              ratings.length
+            : 0;
+
         const dishInfo: DishInfoDto = {
           id: item.dish.id,
           title: item.dish.title,
           description: item.dish.description,
           photo: item.dish.photo,
-          votesCount: 0, // Esto se podría calcular desde DishRating si es necesario
+          averageRating: Math.round(averageRating * 100) / 100, // Redondear a 2 decimales
+          votesCount: ratings.length, // Número real de calificaciones
           calories: item.dish.calories,
           cost: item.dish.cost,
           carbohydrates: item.dish.carbohydrates,
@@ -198,7 +211,6 @@ export class MenuService {
       return handleErrors(error);
     }
   }
-
   async update(
     id: number,
     updateMenuDto: UpdateMenuDto,
@@ -358,7 +370,11 @@ export class MenuService {
         include: {
           menuItems: {
             include: {
-              dish: true,
+              dish: {
+                include: {
+                  dishRatings: true, // Incluir las calificaciones del plato
+                },
+              },
             },
           },
         },
@@ -383,12 +399,21 @@ export class MenuService {
 
       // Preparar los elementos del menú con información detallada de los platos
       const menuItemDetails = menu.menuItems.map((item) => {
+        // Calcular la puntuación promedio del plato
+        const ratings = item.dish.dishRatings;
+        const averageRating =
+          ratings.length > 0
+            ? ratings.reduce((sum, rating) => sum + rating.rating, 0) /
+              ratings.length
+            : 0;
+
         const dishInfo: DishInfoDto = {
           id: item.dish.id,
           title: item.dish.title,
           description: item.dish.description,
           photo: item.dish.photo,
-          votesCount: 0, // Esto se podría calcular desde DishRating si es necesario
+          votesCount: ratings.length, // Número total de calificaciones
+          averageRating: Math.round(averageRating * 100) / 100, // Redondear a 2 decimales
           calories: item.dish.calories,
           cost: item.dish.cost,
           carbohydrates: item.dish.carbohydrates,
@@ -419,7 +444,6 @@ export class MenuService {
         createdAt: menu.createdAt.toISOString(),
         updatedAt: menu.updatedAt.toISOString(),
         menuItems: menuItemDetails,
-        // Asignar los platos por día para mantener compatibilidad con código existente
         monday: dayDishes.monday,
         tuesday: dayDishes.tuesday,
         wednesday: dayDishes.wednesday,
