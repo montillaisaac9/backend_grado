@@ -53,20 +53,49 @@ export class AttendanceService {
           menuItemId: id,
         },
         include: {
-          user: { select: { id: true, name: true, identification: true } },
-          menuItem: { select: { id: true, weekDay: true, date: true } },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              identification: true,
+            },
+          },
+          menuItem: {
+            select: {
+              id: true,
+              date: true,
+              weekDay: true,
+              dish: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
+          },
         },
         skip: offset,
         take: limit,
       });
 
       // Crear un arreglo de DishDto para devolver la respuesta
-      const attendances: Array<AttendanceResponseDto> = query.map((item) => ({
+      const attendances: AttendanceResponseDto[] = query.map((item) => ({
         id: item.id,
-        userId: item.userId,
         createdAt: item.createdAt.toISOString(),
-        user: item.user,
-        menuItem: item.menuItem,
+        user: {
+          id: item.user.id,
+          name: item.user.name,
+          identification: item.user.identification,
+        },
+        menuItem: {
+          id: item.menuItem.id,
+          date: item.menuItem.date.toISOString(),
+          weekDay: item.menuItem.weekDay,
+          dish: {
+            id: item.menuItem.dish.id,
+            title: item.menuItem.dish.title,
+          },
+        },
       }));
 
       // Estructura de respuesta con paginación
