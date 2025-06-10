@@ -50,22 +50,23 @@ export class AttendanceService {
       // Obtener los platos con paginación
       const query = await this.prisma.attendance.findMany({
         where: {
-          menuId: id,
+          menuItemId: id,
         },
         include: {
           user: { select: { id: true, name: true, identification: true } },
+          menuItem: { select: { id: true, weekDay: true, date: true } },
         },
         skip: offset,
         take: limit,
       });
 
       // Crear un arreglo de DishDto para devolver la respuesta
-      const attendances: Array<AttendanceResponseDto> = query.map((att) => ({
-        id: att.id,
-        userId: att.userId,
-        menuId: att.menuId,
-        createdAt: att.createdAt,
-        user: att.user,
+      const attendances: Array<AttendanceResponseDto> = query.map((item) => ({
+        id: item.id,
+        userId: item.userId,
+        createdAt: item.createdAt.toISOString(),
+        user: item.user,
+        menuItem: item.menuItem,
       }));
 
       // Estructura de respuesta con paginación

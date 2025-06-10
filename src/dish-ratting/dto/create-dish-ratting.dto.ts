@@ -8,7 +8,7 @@ export default class CreateDishRatingDto {
   dishId: number;
 
   @IsNumber()
-  @Min(1)
+  @Min(0)
   @Max(5)
   rating: number;
 }

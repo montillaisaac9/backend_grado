@@ -1,44 +1,48 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class MenuItemResponseDto {
+export class DishDto {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: '2025-03-25T00:00:00Z' })
+  @ApiProperty({ example: 'Pollo al curry' })
+  title: string;
+}
+
+export class MenuItemDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: '2025-06-10T00:00:00Z' })
   date: string;
 
   @ApiProperty({ example: 'MONDAY' })
   weekDay: string;
 
-  @ApiProperty({ example: 1 })
-  dishId: number;
-
-  @ApiProperty({ example: '2025-03-25T12:00:00Z' })
-  createdAt: string;
-
-  @ApiProperty({ example: '2025-03-25T12:00:00Z' })
-  updatedAt: string;
+  @ApiProperty({ type: DishDto })
+  dish: DishDto;
 }
 
-export class MenuDto {
+export class UserDto {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: '2025-03-25T00:00:00Z' })
-  weekStart: string;
+  @ApiProperty({ example: 'Juan Pérez' })
+  name: string;
 
-  @ApiProperty({ example: '2025-03-29T00:00:00Z' })
-  weekEnd: string;
+  @ApiProperty({ example: 'V12345678' })
+  identification: string;
+}
 
-  @ApiProperty({ example: true })
-  isActive: boolean;
+export class AttendanceResponseDto {
+  @ApiProperty({ example: 1 })
+  id: number;
 
-  @ApiProperty({ example: '2025-03-20T12:00:00Z' })
+  @ApiProperty({ example: '2025-06-10T14:30:00Z' })
   createdAt: string;
 
-  @ApiProperty({ example: '2025-03-20T12:00:00Z' })
-  updatedAt: string;
+  @ApiProperty({ type: UserDto })
+  user: UserDto;
 
-  @ApiProperty({ type: [MenuItemResponseDto] })
-  menuItems: MenuItemResponseDto[];
+  @ApiProperty({ type: MenuItemDto })
+  menuItem: MenuItemDto;
 }
