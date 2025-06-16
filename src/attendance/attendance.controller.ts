@@ -39,7 +39,7 @@ export class AttendanceController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @Roles(Role.EMPLOYEE)
-  @Post('/menu/:id')
+  @Post('/menu-item/:id')
   @ApiOperation({ summary: 'Obtener asistencias por elemento del menú' })
   @ApiParam({ name: 'id', description: 'ID del elemento del menú' })
   @ApiResponse({ status: 200, description: 'Lista de asistencias obtenida exitosamente' })
@@ -51,12 +51,10 @@ export class AttendanceController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @Roles(Role.EMPLOYEE)
-  @Post('/user/:userId')
+  @Post('/total/:id')
   @ApiOperation({ summary: 'Obtener asistencias por usuario' })
-  @ApiParam({ name: 'userId', description: 'ID del usuario' })
-  @ApiResponse({ status: 200, description: 'Lista de asistencias del usuario obtenida exitosamente' })
-  @ApiResponse({ status: 403, description: 'Acceso denegado - Solo ADMIN o EMPLOYEE' })
-  findByUserId(@Param('userId') userId: string, @Body() pagination: PaginationDto) {
-    return this.attendanceService.findByUserId(+userId, pagination);
+  @ApiParam({ name: 'id', description: 'ID del usuario' })
+  findByUserId(@Param('id') id: string, @Body() pagination: PaginationDto) {
+    return this.attendanceService.findByMenuItemId(+id, pagination);
   }
 }

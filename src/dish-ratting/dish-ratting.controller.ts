@@ -16,6 +16,7 @@ import { RolesGuard } from 'src/roles/roles.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { Role } from '@prisma/client';
 import DishFind from './dto/find-dish-ratting.dto';
+import { get } from 'http';
 
 @UseGuards(AuthGuard)
 @Controller('dish-ratting')
@@ -59,7 +60,7 @@ export class DishRattingController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @Roles(Role.EMPLOYEE)
-  @Get('/dish:id')
+  @Get('/total/:id')
   findByDish(@Param('id') id: string) {
     return this.dishRattingService.getAverageRating(+id);
   }

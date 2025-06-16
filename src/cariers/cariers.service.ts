@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCareerDto } from './dto/create-carier.dto';
 import { UpdateCarierDto } from './dto/update-carier.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { IResponse } from 'src/common/interfaces/response.interface';
 import { handleErrors } from 'src/common/utils/error-handler';
 import { CareerDto } from './dto/carer.dto';
+import { PaginationDto } from 'src/common/dto/paginationParams.dto';
+import { validate } from 'class-validator';
+import { IPaginatedResponse } from 'src/common/interfaces/responsePaginate.interface';
 
 @Injectable()
 export class CariersService {
@@ -26,26 +29,57 @@ export class CariersService {
       return handleErrors<string>(error);
     }
   }
-  async findAll(): Promise<IResponse<Array<CareerDto>>> {
+  async findAll(
+    pagination: PaginationDto,
+  ): Promise<IResponse<IPaginatedResponse<Array<CareerDto>>>> {
     try {
-      const careers = await this.prisma.career.findMany();
+      // Validar y normalizar la paginación
+      const paginationDto = new PaginationDto();
+      paginationDto.offset = Number(pagination?.offset) || 0;
+      paginationDto.limit = Number(pagination?.limit) || 10;
+
+      // Validar el DTO
+      const errors = await validate(paginationDto);
+      if (errors.length > 0) {
+        paginationDto.offset = 0;
+        paginationDto.limit = 10;
+      }
+
+      const { offset, limit } = paginationDto;
+
+      // Obtener el total de registros en la base de datos
+      const total = await this.prisma.career.count();
+
+      // Obtener las carreras con paginación
+      const careers = await this.prisma.career.findMany({
+        skip: offset,
+        take: limit,
+      });
 
       const careersArray: Array<CareerDto> = careers.map((career) => ({
         id: career.id,
         name: career.name,
-        description: career.description ?? undefined, // Convierte null en undefined
+        description: career.description ?? undefined,
         createdAt: career.createdAt,
         updatedAt: career.updatedAt,
         isActive: career.isActive,
       }));
 
+      // Estructura de respuesta con paginación
+      const response: IPaginatedResponse<Array<CareerDto>> = {
+        offset: offset ? offset : 0,
+        limit: limit ? limit : 10,
+        arrayList: careersArray,
+        total,
+      };
+
       return {
         success: true,
-        data: careersArray,
+        data: response,
         error: null,
       };
     } catch (error: unknown) {
-      return handleErrors<CareerDto[]>(error);
+      return handleErrors<IPaginatedResponse<Array<CareerDto>>>(error);
     }
   }
 
@@ -56,14 +90,14 @@ export class CariersService {
         select: {
           id: true,
           name: true,
-        }
+        },
       });
-  
+
       const careersArray: Array<CareerDto> = careers.map((career) => ({
         id: career.id,
         name: career.name,
       }));
-  
+
       return {
         success: true,
         data: careersArray,
@@ -73,7 +107,6 @@ export class CariersService {
       return handleErrors<CareerDto[]>(error);
     }
   }
-  
 
   async findOne(id: number): Promise<IResponse<CareerDto>> {
     try {

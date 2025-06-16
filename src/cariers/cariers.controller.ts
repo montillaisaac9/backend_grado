@@ -12,6 +12,7 @@ import { CariersService } from './cariers.service';
 import { CreateCareerDto } from './dto/create-carier.dto';
 import { UpdateCarierDto } from './dto/update-carier.dto';
 import { AuthGuard } from 'src/auth-guard/auth-guard.guard';
+import { PaginationDto } from 'src/common/dto/paginationParams.dto';
 import { RolesGuard } from 'src/roles/roles.guard';
 import { Roles } from 'src/roles/roles.decorator';
 import { Role } from '@prisma/client';
@@ -29,13 +30,9 @@ export class CariersController {
     return this.cariersService.create(createCarierDto);
   }
 
-  @UseGuards(AuthGuard)
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
-  @Get()
-  findAll() {
-    return this.cariersService.findAll();
+  @Post('/all')
+  async findAll(@Body() pagination: PaginationDto) {
+    return this.cariersService.findAll(pagination);
   }
 
   @Get('/active')

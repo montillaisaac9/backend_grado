@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Body,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -6,17 +15,30 @@ import { AuthGuard } from '../auth-guard/auth-guard.guard';
 import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
 import { Role } from '@prisma/client';
+import { ApiTags, ApiBody, ApiOperation } from '@nestjs/swagger';
+import { PaginationDto } from 'src/common/dto/paginationParams.dto';
 
+@ApiTags('users')
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get()
+  @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  findAll() {
-    return this.usersService.findAll();
+  @ApiOperation({ summary: 'Create a new user' })
+  async create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
+
+  @Post('/all')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Get all users with pagination' })
+  @ApiBody({ type: PaginationDto })
+  async findAll(@Body() pagination: PaginationDto) {
+    return this.usersService.findAll(pagination);
   }
 
   @Get(':id')

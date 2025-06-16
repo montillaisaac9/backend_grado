@@ -116,8 +116,8 @@ export class AttendanceService {
     }
   }
 
-  async findByUserId(
-    userId: number,
+  async findByMenuItemId(
+    menuItemId: number,
     pagination: PaginationDto,
   ): Promise<IResponse<IPaginatedResponse<Array<AttendanceResponseDto>>>> {
     try {
@@ -134,14 +134,14 @@ export class AttendanceService {
       // Obtener el total de registros para este usuario
       const total = await this.prisma.attendance.count({
         where: {
-          userId: userId,
+          menuItemId: menuItemId,
         },
       });
 
       // Obtener las asistencias del usuario con paginación
       const query = await this.prisma.attendance.findMany({
         where: {
-          userId: userId,
+          menuItemId: menuItemId,
         },
         include: {
           user: {

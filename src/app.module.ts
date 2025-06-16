@@ -13,6 +13,7 @@ import { CommentModule } from './comment/comment.module';
 import { DishRattingModule } from './dish-ratting/dish-ratting.module';
 import { CariersModule } from './cariers/cariers.module';
 import { StatsModule } from './stats/stats.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   controllers: [AppController],
@@ -32,6 +33,7 @@ import { StatsModule } from './stats/stats.module';
     DishRattingModule,
     CariersModule,
     StatsModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
