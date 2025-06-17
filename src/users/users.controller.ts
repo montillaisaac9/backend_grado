@@ -25,16 +25,16 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  
+  
   @ApiOperation({ summary: 'Create a new user' })
   async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
   @Post('/all')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  
+  
   @ApiOperation({ summary: 'Get all users with pagination' })
   @ApiBody({ type: PaginationDto })
   async findAll(@Body() pagination: PaginationDto) {
@@ -52,8 +52,8 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  
+  
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }

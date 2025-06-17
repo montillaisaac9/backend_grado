@@ -33,16 +33,16 @@ export class CommentController {
     return this.commentService.findByUserIdAndDishId(findDish);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Post('/dish/:id')
   finByMenuId(@Param('id') id: string, @Body() pagination: PaginationDto) {
     return this.commentService.findAll(+id, pagination);
   }
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.commentService.findOne(+id);

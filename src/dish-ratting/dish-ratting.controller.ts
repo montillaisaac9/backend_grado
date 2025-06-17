@@ -33,17 +33,14 @@ export class DishRattingController {
     return this.dishRattingService.findByUserIdAndDishId(findDish);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
   @Post('/:id')
   finByMenuId(@Param('id') id: string, @Body() pagination: PaginationDto) {
     return this.dishRattingService.findAllByDish(parseInt(id), pagination);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.dishRattingService.findOne(+id);
@@ -57,9 +54,9 @@ export class DishRattingController {
     return this.dishRattingService.update(+id, updateDishRattingDto);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Get('/total/:id')
   findByDish(@Param('id') id: string) {
     return this.dishRattingService.getAverageRating(+id);

@@ -22,9 +22,9 @@ export class CariersController {
   constructor(private readonly cariersService: CariersService) {}
 
   @UseGuards(AuthGuard)
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Post()
   create(@Body() createCarierDto: CreateCareerDto) {
     return this.cariersService.create(createCarierDto);
@@ -41,18 +41,18 @@ export class CariersController {
   }
 
   @UseGuards(AuthGuard)
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.cariersService.findOne(+id);
   }
 
   @UseGuards(AuthGuard)
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCarierDto: UpdateCarierDto) {
     return this.cariersService.update(+id, updateCarierDto);

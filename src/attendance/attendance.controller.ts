@@ -36,9 +36,9 @@ export class AttendanceController {
     return this.attendanceService.findByUserAndMenuItem(+userId, +menuItemId);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Post('/menu-item/:id')
   @ApiOperation({ summary: 'Obtener asistencias por elemento del menú' })
   @ApiParam({ name: 'id', description: 'ID del elemento del menú' })
@@ -48,9 +48,9 @@ export class AttendanceController {
     return this.attendanceService.finByMenuId(+id, pagination);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Post('/total/:id')
   @ApiOperation({ summary: 'Obtener asistencias por usuario' })
   @ApiParam({ name: 'id', description: 'ID del usuario' })

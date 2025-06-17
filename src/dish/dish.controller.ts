@@ -25,9 +25,9 @@ import { Role } from '@prisma/client';
 export class DishController {
   constructor(private readonly dishService: DishService) {}
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   create(
@@ -40,33 +40,33 @@ export class DishController {
     );
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Post('/all')
   findAll(@Body() pagination: PaginationDto) {
     return this.dishService.getAllDish(pagination);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Get('/active')
   findActive() {
     return this.dishService.findActive();
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.dishService.findOne(+id);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @UseInterceptors(FileInterceptor('image'))
   @Patch(':id')
   update(
@@ -81,9 +81,9 @@ export class DishController {
     );
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.dishService.remove(+id);

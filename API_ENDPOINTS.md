@@ -32,7 +32,6 @@
   role?: Role; // @IsOptional() @IsEnum(Role)
 }
 ```
-### `POST /auth/forgot-password` - Request password reset (sends email with token)
 `POST /auth/reset-password` - Reset password using token
 
 ## User Management

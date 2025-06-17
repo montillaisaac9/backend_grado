@@ -22,41 +22,41 @@ import { Role } from '@prisma/client';
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Post()
   create(@Body() createMenuDto: CreateMenuDto) {
     return this.menuService.create(createMenuDto);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Post('/all')
   findAll(@Body() pagination: PaginationDto) {
     return this.menuService.getAllMenu(pagination);
   }
 
-  /*   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  /*   
+  
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.menuService.findOne(parseInt(id));
   } */
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
     return this.menuService.update(+id, updateMenuDto);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @Roles(Role.EMPLOYEE)
+  
+  
+  
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.menuService.remove(+id);
