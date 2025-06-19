@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { CareerDto } from 'src/cariers/dto/carer.dto';
 
-export class CareerDto {
+export class SelectDto {
   @ApiProperty({ example: 1 })
   id: number;
 

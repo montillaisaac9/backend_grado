@@ -19,4 +19,3 @@ export class CareerDto {
   @Expose()
   isActive?: boolean;
 }
-

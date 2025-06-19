@@ -14,11 +14,6 @@ export class ChangePasswordDto {
   @IsEmail()
   email: string;
 
-  @ApiProperty({ example: Role.STUDENT, enum: Role, description: 'User role' })
-  @IsEnum(Role, { message: 'El rol debe ser STUDENT, ADMIN o EMPLOYEE' })
-  @IsNotEmpty({ message: 'El rol es obligatorio' })
-  role: Role;
-
   @ApiProperty({
     description: 'Palabra de seguridad del usuario',
   })
@@ -28,6 +23,6 @@ export class ChangePasswordDto {
 
   @ApiProperty({ description: 'Nueva contraseña del usuario', minLength: 6 })
   @IsString()
-  @MinLength(6)
+  @MinLength(1)
   newPassword: string;
 }

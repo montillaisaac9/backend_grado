@@ -7,6 +7,8 @@ import { IPaginatedResponse } from '../common/interfaces/responsePaginate.interf
 import { handleErrors } from '../common/utils/error-handler';
 import { IResponse } from '../common/interfaces/response.interface';
 import { PaginationDto } from 'src/common/dto/paginationParams.dto';
+import { SelectDto } from 'src/authentication/dto/UserDto.dto';
+import { CareerDto } from 'src/cariers/dto/carer.dto';
 
 @Injectable()
 export class UsersService {
@@ -111,6 +113,31 @@ export class UsersService {
       return { success: true, data: user, error: null };
     } catch (error) {
       return handleErrors(error);
+    }
+  }
+
+  async findActive(): Promise<IResponse<Array<SelectDto>>> {
+    try {
+      const careers = await this.prisma.user.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
+      const careersArray: Array<CareerDto> = careers.map((career) => ({
+        id: career.id,
+        name: career.name,
+      }));
+
+      return {
+        success: true,
+        data: careersArray,
+        error: null,
+      };
+    } catch (error: unknown) {
+      return handleErrors<SelectDto[]>(error);
     }
   }
 }
